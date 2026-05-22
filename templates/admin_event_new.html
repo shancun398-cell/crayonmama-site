@@ -33,36 +33,36 @@
         <label class="form-label">開催時間①</label>
 
         <div class="time-range-row">
-          <input type="time" name="time1_start" class="form-input" value="{{ event.time1_start or '10:00' }}" />
+          <input type="time" name="time1_start" class="form-input" value="10:00" />
 
           <span class="time-range-separator">〜</span>
 
-          <input type="time" name="time1_end" class="form-input" value="{{ event.time1_end or '11:00' }}" />
+          <input type="time" name="time1_end" class="form-input" value="11:00" />
         </div>
       </div>
 
       <div class="form-group">
         <label class="form-label">定員①</label>
 
-        <input type="number" name="capacity_time1" class="form-input" value="{{ event.capacity_time1 or 10 }}" />
+        <input type="number" name="capacity_time1" class="form-input" value="10" />
       </div>
 
       <div class="form-group">
         <label class="form-label">開催時間②（任意）</label>
 
         <div class="time-range-row">
-          <input type="time" name="time2_start" class="form-input" value="{{ event.time2_start or '' }}" />
+          <input type="time" name="time2_start" class="form-input" value="" />
 
           <span class="time-range-separator">〜</span>
 
-          <input type="time" name="time2_end" class="form-input" value="{{ event.time2_end or '' }}" />
+          <input type="time" name="time2_end" class="form-input" value="" />
         </div>
       </div>
 
       <div class="form-group">
         <label class="form-label">定員②</label>
 
-        <input type="number" name="capacity_time2" class="form-input" value="{{ event.capacity_time2 or '' }}" />
+        <input type="number" name="capacity_time2" class="form-input" value="" />
       </div>
 
       <div class="form-group">
