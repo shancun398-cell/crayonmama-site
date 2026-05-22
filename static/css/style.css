@@ -9256,3 +9256,7 @@ img {
 .login-back-link:hover {
     color: #eb5fa7 !important;
 }
+.event-belongings-input {
+    min-height: 96px;
+    line-height: 1.8;
+}

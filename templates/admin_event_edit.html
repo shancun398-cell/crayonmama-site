@@ -167,7 +167,17 @@
 
         <div class="form-group">
             <label class="form-label">持ち物</label>
-            <input type="text" name="belongings" class="form-input" value="{{ event.belongings or '' }}" placeholder="例：飲み物, 着替え, タオル">
+
+            <textarea
+                name="belongings"
+                class="form-textarea event-belongings-input"
+                rows="3"
+                placeholder="例：飲み物、タオル、着替えなど"
+            >{{ event.belongings or '' }}</textarea>
+
+            <div class="form-help">
+                複数ある場合は、改行または「、」で区切って入力できます。
+            </div>
         </div>
 
         <div class="form-group">

@@ -2947,6 +2947,7 @@ def admin_event_edit(event_id):
 
     event = conn.execute(
         "SELECT * FROM events WHERE id = ?", (event_id,)).fetchone()
+    print(event["belongings"])
 
     if not event:
         conn.close()
