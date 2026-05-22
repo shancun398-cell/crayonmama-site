@@ -159,12 +159,14 @@
 
       <ul class="detail-check-list">
         {% if event.belongings %}
-          {% for item in event.belongings.split(',') %}
-            <li>{{ item.strip() }}</li>
+          {% for item in event.belongings.splitlines() %}
+            <div class="belonging-item">
+              <span class="check-icon">✓</span>
+              {{ item }}
+            </div>
           {% endfor %}
         {% else %}
-          <li>飲み物</li>
-          <li>着替え</li>
+          <p>特にありません</p>
         {% endif %}
       </ul>
 
