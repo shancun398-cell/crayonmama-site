@@ -9238,3 +9238,18 @@ img {
 .admin-login-link:hover {
     color: #eb5fa7;
 }
+.login-back-link {
+    display: block;
+    margin-top: 18px;
+
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+
+    color: #8a95aa;
+    text-decoration: none;
+}
+
+.login-back-link:hover {
+    color: #eb5fa7;
+}
