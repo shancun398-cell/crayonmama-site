@@ -1,0 +1,29 @@
+{% extends 'public_base.html' %}
+
+{% block title %}
+  お問い合わせ完了 | くれよんママ
+{% endblock %}
+
+{% block content %}
+  <section class="contact-page">
+    <section class="contact-header-block">
+      <div class="contact-back-row">
+        <a href="{{ url_for('contact') }}" class="contact-back-button">‹</a>
+        <h1 class="contact-page-title">送信完了</h1>
+      </div>
+    </section>
+
+    <section class="contact-complete-card">
+      <div class="contact-complete-icon">✓</div>
+      <h2 class="contact-complete-title">送信ありがとうございました</h2>
+      <p class="contact-complete-text">
+        お問い合わせ内容を受け付けました。<br />
+        内容を確認のうえ、必要に応じてご連絡いたします。
+      </p>
+
+      <div class="contact-complete-actions">
+        <a href="{{ url_for('index') }}" class="contact-complete-button">トップへ戻る</a>
+      </div>
+    </section>
+  </section>
+{% endblock %}

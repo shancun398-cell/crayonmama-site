@@ -1,0 +1,175 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}
+  お問い合わせ一覧 | くれよんママ
+{% endblock %}
+
+{% block content %}
+  <section class="admin-contacts-page">
+    <div class="admin-page-head">
+      <div>
+        <h1 class="section-title">お問い合わせ一覧</h1>
+        <p class="page-lead">参加者・利用者から届いたお問い合わせを確認できます。</p>
+      </div>
+    </div>
+
+    <div class="applications-summary-grid">
+      <div class="applications-summary-card">
+        <div class="applications-summary-icon gray">
+          <span class="material-symbols-outlined">inbox</span>
+        </div>
+        <div class="applications-summary-value gray">{{ summary.total_count }}</div>
+        <div class="applications-summary-label">合計</div>
+      </div>
+
+      <div class="applications-summary-card">
+        <div class="applications-summary-icon green">
+          <span class="material-symbols-outlined">mark_email_unread</span>
+        </div>
+        <div class="applications-summary-value green">{{ summary.unread_count }}</div>
+        <div class="applications-summary-label">未読</div>
+      </div>
+
+      <div class="applications-summary-card">
+        <div class="applications-summary-icon yellow">
+          <span class="material-symbols-outlined">quickreply</span>
+        </div>
+        <div class="applications-summary-value yellow">{{ summary.reply_needed_count }}</div>
+        <div class="applications-summary-label">返信希望</div>
+      </div>
+    </div>
+
+    {% if grouped_contacts %}
+      <div class="applications-group-list">
+        {% for group in grouped_contacts %}
+          <section class="applications-event-group">
+            <div class="applications-event-group-head">
+              <div>
+                <div class="applications-group-title">{{ group.month_key }}</div>
+
+                <div class="applications-group-sub">合計 {{ group.count }}件</div>
+              </div>
+
+              <div class="applications-group-right">
+                {% if group.unread_count > 0 %}
+                  <span class="mini-badge confirmed">未読 {{ group.unread_count }}</span>
+                {% endif %}
+
+                {% if group.reply_needed_count > 0 %}
+                  <span class="mini-badge waiting">返信希望 {{ group.reply_needed_count }}</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="applications-group-actions">
+              <button type="button" class="applications-group-toggle-button" onclick="toggleContactMonth('contact-month-{{ loop.index }}', 'contact-month-icon-{{ loop.index }}')">
+                <span>内容を開く</span>
+                <span id="contact-month-icon-{{ loop.index }}" class="material-symbols-outlined">expand_more</span>
+              </button>
+            </div>
+
+            <div id="contact-month-{{ loop.index }}" class="applications-group-body" style="display:none;">
+              {% for contact in group.contacts %}
+                <div class="applications-item-card {% if contact.is_read == 1 %}is-read{% endif %}">
+                  <div class="applications-item-top">
+                    <div>
+                      <div class="applications-top-badge-row">
+                        {% if contact.reply_needed == 1 %}
+                          <span class="badge badge-waiting">返信希望</span>
+                        {% else %}
+                          <span class="badge badge-confirmed">確認用</span>
+                        {% endif %}
+
+                        {% if contact.is_read == 0 %}
+                          <span class="badge badge-confirmed">未読</span>
+                        {% else %}
+                          <span class="badge badge-cancelled">確認済み</span>
+                        {% endif %}
+                      </div>
+
+                      <div class="applications-name">{{ contact.contact_type }}</div>
+
+                      <div class="applications-event-title strong">{{ contact.name or 'お名前未入力' }}</div>
+                    </div>
+
+                    <div class="applications-top-right">
+                      <div class="applications-date">{{ contact.created_at }}</div>
+                    </div>
+                  </div>
+
+                  <button type="button" class="applications-detail-toggle" onclick="toggleContactDetail('contact-{{ contact.id }}', 'contact-icon-{{ contact.id }}', {{ contact.id }})">
+                    <span id="contact-icon-{{ contact.id }}" class="material-symbols-outlined">expand_more</span>
+
+                    <span>内容を見る</span>
+                  </button>
+
+                  <div id="contact-{{ contact.id }}" class="applications-detail-area" style="display:none;">
+                    <div class="applications-contact">
+                      {% if contact.email %}
+                        <a href="https://mail.google.com/mail/?view=cm&to={{ contact.email }}&su=【くれよんママ】お問い合わせの件&body={{ contact.name or '' }} 様%0D%0A%0D%0Aお問い合わせありがとうございます。%0D%0A" target="_blank" class="applications-contact-item">
+                          <span class="material-symbols-outlined">mail</span>
+                          <span>{{ contact.email }}</span>
+                        </a>
+                      {% else %}
+                        <div class="applications-contact-item">
+                          <span class="material-symbols-outlined">mail_off</span>
+                          <span>メール未入力</span>
+                        </div>
+                      {% endif %}
+                    </div>
+
+                    <div class="contact-admin-message">{{ contact.message }}</div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </section>
+        {% endfor %}
+      </div>
+      <div class="soft-card empty-state">
+        <div class="empty-icon">
+          <span class="material-symbols-outlined">mail</span>
+        </div>
+        <p>お問い合わせはまだありません</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    function toggleContactDetail(contentId, iconId, contactId) {
+      const content = document.getElementById(contentId)
+      const icon = document.getElementById(iconId)
+    
+      if (!content || !icon) return
+    
+      if (content.style.display === 'none' || content.style.display === '') {
+        content.style.display = 'block'
+        icon.textContent = 'expand_less'
+    
+        fetch(`/admin/contacts/${contactId}/read`, {
+          method: 'POST'
+        })
+      } else {
+        content.style.display = 'none'
+        icon.textContent = 'expand_more'
+      }
+    }
+    
+    function toggleContactMonth(contentId, iconId) {
+      const content = document.getElementById(contentId)
+      const icon = document.getElementById(iconId)
+    
+      if (!content || !icon) return
+    
+      if (content.style.display === 'none' || content.style.display === '') {
+        content.style.display = 'block'
+        icon.textContent = 'expand_less'
+      } else {
+        content.style.display = 'none'
+        icon.textContent = 'expand_more'
+      }
+    }
+  </script>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% extends 'public_base.html' %}
+
+{% block title %}
+  くれよんママ
+{% endblock %}
+
+{% block content %}
+  <section class="mobile-top-page">
+    <section class="mobile-hero">
+      <div class="mobile-hero-image">
+        <div class="mobile-hero-topbar">
+          <div class="mobile-hero-brand">
+            <div class="mobile-hero-brand-mark">
+              <span class="material-symbols-outlined">
+                palette
+              </span>
+            </div>
+            <div class="mobile-hero-brand-text">くれよんママ</div>
+          </div>
+        </div>
+
+        <div class="mobile-hero-overlay">
+          <div class="mobile-hero-logo">
+            <span class="material-symbols-outlined">
+              palette
+            </span>
+          </div>
+
+          <h1 class="mobile-hero-title">
+            親子で楽しむ、<br />
+            心温まる時間。
+          </h1>
+
+          <p class="mobile-hero-text">音楽・絵本・手遊びで、笑顔あふれる毎日を</p>
+
+          <a href="{{ url_for('events') }}" class="mobile-hero-button">イベントを見る</a>
+        </div>
+
+        <div class="mobile-hero-curve"></div>
+      </div>
+    </section>
+    <section class="mobile-section">
+      <h2 class="mobile-section-title with-bar">私たちの活動</h2>
+
+      <div class="mobile-about-main-card">
+
+        <p class="mobile-about-main-text">
+          {{ page.body if page else 'くれよんママは、親子で安心して楽しめる時間を大切にしながら、音楽・絵本・手遊びなどを通して、地域のつながりを育む活動を行っています。' }}
+        </p>
+
+        <a href="{{ url_for('members') }}"
+          class="mobile-about-main-button">
+          活動・メンバーの紹介
+        </a>
+
+      </div>
+    </section>
+
+    <section class="mobile-section">
+      <section class="mobile-section pc-event-highlight">
+      <div class="mobile-section-header">
+        <h2 class="mobile-section-title with-bar">次回のイベント</h2>
+        <a href="{{ url_for('events') }}" class="mobile-link-more">すべて見る ›</a>
+      </div>
+
+      {% if next_event %}
+        <div class="mobile-event-card">
+          <div class="mobile-event-image">
+            <img src="{{ next_event.image_url or '/static/images/noimage.jpg' }}" alt="{{ next_event.title }}" />
+            <div class="mobile-event-badge">{{ next_event.category }}</div>
+            <div class="mobile-event-status">受付中</div>
+          </div>
+
+          <div class="mobile-event-body">
+            <div class="mobile-event-title">{{ next_event.title }}</div>
+
+            <div class="mobile-event-meta">
+              <div>
+                <span class="material-symbols-outlined inline-icon">
+                  calendar_month
+                </span>
+
+                {{ next_event.event_date }}
+              </div>
+              <div>
+                <span class="material-symbols-outlined inline-icon">
+                  location_on
+                </span>
+
+                {{ next_event.location or '会場未設定' }}
+              </div>
+            </div>
+
+            <div class="mobile-event-footer">
+              <div>定員 {{ next_event.display_capacity }}組</div>
+
+              <div>残り {{ next_event.remaining_count }}組</div>
+            </div>
+
+            <div class="event-list-progress">
+              <div
+                class="event-list-progress-fill
+                {% if next_event.remaining_count <= 2 %}
+                  low
+                {% endif %}"
+                style="width: {{ next_event.progress_percent }}%;"
+              ></div>
+            </div>
+
+            <a
+              href="{{ url_for('event_detail', event_id=next_event.id) }}"
+              class="mobile-event-button"
+            >
+              詳しく見る
+            </a>
+        </div>
+      {% else %}
+        <div class="soft-card empty-state">
+          <div class="empty-icon">
+            <span class="material-symbols-outlined">
+              event_busy
+            </span>
+          </div>
+          <p>現在開催予定のイベントはありません</p>
+        </div>
+      {% endif %}
+    </section>
+
+    <section class="mobile-section">
+      <div class="mobile-section-header">
+        <h2 class="mobile-section-title with-bar">これまでの活動</h2>
+        <a href="{{ url_for('archive') }}" class="mobile-link-more">すべて見る ›</a>
+      </div>
+
+      <div class="mobile-about-cards">
+        {% for event in recent_events %}
+          <a href="{{ url_for('archive_detail', event_id=event.id) }}" class="mobile-about-card">
+            <div class="mobile-about-thumb">
+              {% if event.image_url %}
+                <img src="{{ event.image_url }}" alt="{{ event.title }}" />
+              {% else %}
+                <div class="mobile-about-placeholder">
+                  <span class="material-symbols-outlined">
+                    photo_library
+                  </span>
+                </div>
+              {% endif %}
+            </div>
+            <div class="mobile-about-content">
+              <div class="mobile-about-title">{{ event.title }}</div>
+              <div class="mobile-about-text">{{ event.event_date }}</div>
+            </div>
+            <div class="mobile-about-arrow">›</div>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="mobile-bottom-brand">
+      <div class="mobile-bottom-brand-logo">🎨</div>
+      <div class="mobile-bottom-brand-text">親子で楽しむ、心温まる時間。</div>
+
+      <div class="mobile-bottom-brand-links">
+        <a href="{{ url_for('events') }}">イベント</a>
+        <a href="{{ url_for('archive') }}">ギャラリー</a>
+        <a href="{{ url_for('contact') }}">お問い合わせ</a>
+      </div>
+
+      <div class="mobile-bottom-brand-copy">© 2026 くれよんママ</div>
+    </section>
+  </section>
+{% endblock %}

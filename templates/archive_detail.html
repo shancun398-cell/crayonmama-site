@@ -1,0 +1,155 @@
+{% extends 'public_base.html' %}
+
+{% block title %}
+  活動記録詳細 | くれよんママ
+{% endblock %}
+
+{% block content %}
+  <section class="archive-detail-page">
+    <section class="archive-detail-hero">
+      <div class="archive-detail-hero-image">
+        {% if main_image %}
+          <img src="{{ main_image }}" alt="{{ event.title }}" />
+        {% else %}
+          <div class="archive-detail-placeholder">
+            <span class="material-symbols-outlined">photo_library</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <a href="{{ url_for('archive') }}" class="archive-detail-back-button">‹</a>
+
+      <div class="archive-detail-hero-overlay">
+        <div class="archive-detail-category">{{ event.category or 'イベント' }}</div>
+        <h1 class="archive-detail-title">{{ event.title }}</h1>
+        <div class="archive-detail-date">{{ event.event_date }}</div>
+      </div>
+    </section>
+
+    <section class="archive-detail-content">
+      <div class="archive-detail-participants">
+        <div class="archive-detail-participants-icon">
+          <span class="material-symbols-outlined">groups</span>
+        </div>
+        <div class="archive-detail-participants-text">笑顔あふれるイベントになりました</div>
+      </div>
+
+      {% if video_path %}
+        <section class="archive-detail-section">
+          <h2 class="archive-detail-section-title">活動動画</h2>
+
+          <div class="archive-detail-video-wrap">
+            <video controls class="archive-detail-video-player">
+              <source src="{{ video_path }}" type="video/mp4" />お使いのブラウザは動画再生に対応していません。
+            </video>
+          </div>
+        </section>
+      {% endif %}
+
+      <section class="archive-detail-section">
+        <h2 class="archive-detail-section-title">イベントの様子</h2>
+
+        <div class="archive-detail-gallery">
+          {% if event_images %}
+            {% for image in event_images %}
+              <div class="archive-detail-gallery-item">
+                {% if image.image_path %}
+                  <img src="{{ image.image_path }}" alt="活動記録画像" class="archive-gallery-thumb" onclick="openGalleryModal({{ loop.index0 }})" />
+                {% else %}
+                  <div class="archive-detail-participants-icon">
+                    <span class="material-symbols-outlined">groups</span>
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="archive-detail-gallery-item">
+              <div class="archive-detail-participants-icon">
+                <span class="material-symbols-outlined">groups</span>
+              </div>
+            </div>
+            <div class="archive-detail-gallery-item">
+              <div class="archive-detail-participants-icon">
+                <span class="material-symbols-outlined">groups</span>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+
+        {% if event_images %}
+          <div id="galleryModal" class="gallery-modal" onclick="closeGalleryModal(event)">
+            <div class="gallery-modal-inner">
+              <button type="button" class="gallery-close" onclick="closeGalleryModalButton()">×</button>
+
+              <button type="button" class="gallery-nav gallery-prev" onclick="prevGalleryImage(event)">‹</button>
+
+              <img id="galleryModalImage" src="" alt="拡大画像" class="gallery-modal-image" />
+
+              <button type="button" class="gallery-nav gallery-next" onclick="nextGalleryImage(event)">›</button>
+            </div>
+          </div>
+
+          <script>
+    const galleryImages = [
+      {% for image in event_images %}
+        {% if image.image_path %}
+          "{{ image.image_path }}"{% if not loop.last %},{% endif %}
+        {% endif %}
+      {% endfor %}
+    ];
+
+    let currentGalleryIndex = 0;
+
+    function openGalleryModal(index) {
+      currentGalleryIndex = index;
+      const modal = document.getElementById("galleryModal");
+      const modalImage = document.getElementById("galleryModalImage");
+
+      if (!modal || !modalImage || !galleryImages.length) return;
+
+      modalImage.src = galleryImages[currentGalleryIndex];
+      modal.classList.add("show");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeGalleryModal(e) {
+      if (e.target.id === "galleryModal") {
+        const modal = document.getElementById("galleryModal");
+        modal.classList.remove("show");
+        document.body.style.overflow = "";
+      }
+    }
+
+    function closeGalleryModalButton() {
+      const modal = document.getElementById("galleryModal");
+      modal.classList.remove("show");
+      document.body.style.overflow = "";
+    }
+
+    function prevGalleryImage(e) {
+      e.stopPropagation();
+      if (!galleryImages.length) return;
+
+      currentGalleryIndex =
+        (currentGalleryIndex - 1 + galleryImages.length) % galleryImages.length;
+
+      document.getElementById("galleryModalImage").src =
+        galleryImages[currentGalleryIndex];
+    }
+
+    function nextGalleryImage(e) {
+      e.stopPropagation();
+      if (!galleryImages.length) return;
+
+      currentGalleryIndex =
+        (currentGalleryIndex + 1) % galleryImages.length;
+
+      document.getElementById("galleryModalImage").src =
+        galleryImages[currentGalleryIndex];
+    }
+  </script>
+        {% endif %}
+      </section>
+    </section>
+  </section>
+{% endblock %}

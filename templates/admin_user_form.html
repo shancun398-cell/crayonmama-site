@@ -1,0 +1,61 @@
+{% extends "admin_base.html" %}
+
+{% block title %}
+メンバー追加
+{% endblock %}
+
+{% block content %}
+<h1 class="section-title">
+{% if user %}
+メンバー編集
+{% else %}
+メンバー追加
+{% endif %}
+</h1>
+
+<div class="form-card">
+    <form method="POST">
+
+        <div class="form-group">
+            <label class="form-label">名前</label>
+            <input type="text" name="name" class="form-input"
+            value="{{ user.name if user else '' }}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">メールアドレス</label>
+            <input type="email" name="email" class="form-input"
+            value="{{ user.email if user else '' }}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">パスワード</label>
+            <input type="password" name="password" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">権限</label>
+            <select name="role" class="form-select">
+            <option value="admin"
+                {% if user and user.role == 'admin' %}selected{% endif %}>
+                管理者
+            </option>
+
+            <option value="member"
+                {% if user and user.role == 'member' %}selected{% endif %}>
+                メンバー
+            </option>
+            </select>
+        </div>
+
+        <button type="submit" class="primary-button">
+        {% if user %}
+        更新する
+        {% else %}
+        追加する
+        {% endif %}
+        </button>
+
+    </form>
+</div>
+{% endblock %}

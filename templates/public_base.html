@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>
+      {% block title %}
+        くれよんママ
+      {% endblock %}
+    </title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    {% block head %}
+
+    {% endblock %}
+  </head>
+
+  <body class="site-body {% block body_class %}
+
+    {% endblock %}">
+    <button class="floating-menu-button" type="button" id="menuButton">
+      ☰
+      <span>メニュー</span>
+    </button>
+
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+
+    <aside class="drawer-menu" id="drawerMenu">
+      <div class="drawer-menu-head">
+        <div class="drawer-menu-title">メニュー</div>
+
+        <button type="button" class="drawer-close" id="drawerClose">×</button>
+      </div>
+
+      <nav class="drawer-nav">
+        <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">
+          <span class="material-symbols-outlined">home</span>
+
+          ホーム
+        </a>
+
+        <a href="{{ url_for('events') }}" class="{% if request.endpoint == 'events' %}active{% endif %}">
+          <span class="material-symbols-outlined">calendar_month</span>
+
+          イベント一覧
+        </a>
+
+        <a href="{{ url_for('archive') }}" class="{% if request.endpoint == 'archive' %}active{% endif %}">
+          <span class="material-symbols-outlined">photo_library</span>
+
+          ギャラリー
+        </a>
+
+        <a href="{{ url_for('members') }}" class="{% if request.endpoint == 'members' %}active{% endif %}">
+          <span class="material-symbols-outlined">groups</span>
+
+          活動・メンバー紹介
+        </a>
+
+        <a href="{{ url_for('contact') }}" class="{% if request.endpoint == 'contact' %}active{% endif %}">
+          <span class="material-symbols-outlined">mail</span>
+
+          お問い合わせ
+        </a>
+        <a href="{{ url_for('admin_login') }}">
+          <span class="material-symbols-outlined">admin_panel_settings</span>
+          管理者ログイン
+        </a>
+      </nav>
+    </aside>
+    <header class="pc-header">
+      <div class="pc-header-inner">
+        <a href="{{ url_for('index') }}" class="pc-logo">くれよんママ</a>
+
+        <nav class="pc-nav">
+          <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">ホーム</a>
+
+          <a href="{{ url_for('events') }}" class="{% if request.endpoint == 'events' %}active{% endif %}">イベント一覧</a>
+
+          <a href="{{ url_for('archive') }}" class="{% if request.endpoint == 'archive' %}active{% endif %}">活動記録</a>
+
+          <a href="{{ url_for('members') }}" class="{% if request.endpoint == 'members' %}active{% endif %}">メンバー紹介</a>
+
+          <a href="{{ url_for('contact') }}" class="{% if request.endpoint == 'contact' %}active{% endif %}">お問い合わせ</a>
+
+          <a href="{{ url_for('admin_login') }}" class="admin-login-link">管理者ログイン</a>
+        </nav>
+
+        <a href="{{ url_for('events') }}" class="pc-header-button">イベントに申し込む</a>
+      </div>
+    </header>
+
+    <div class="app-shell">
+      <main class="page-content">
+        {% block content %}
+
+        {% endblock %}
+      </main>
+
+      <nav class="bottom-nav">
+        <a href="{{ url_for('index') }}" class="bottom-nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+          <span class="material-symbols-outlined bottom-nav-icon">home</span>
+
+          <span>ホーム</span>
+        </a>
+
+        <a href="{{ url_for('events') }}" class="bottom-nav-item {% if request.endpoint == 'events' %}active{% endif %}">
+          <span class="material-symbols-outlined bottom-nav-icon">calendar_month</span>
+
+          <span>イベント</span>
+        </a>
+
+        <a href="{{ url_for('archive') }}" class="bottom-nav-item {% if request.endpoint == 'archive' %}active{% endif %}">
+          <span class="material-symbols-outlined bottom-nav-icon">photo_library</span>
+
+          <span>ギャラリー</span>
+        </a>
+
+        <a href="{{ url_for('contact') }}" class="bottom-nav-item {% if request.endpoint == 'contact' %}active{% endif %}">
+          <span class="material-symbols-outlined bottom-nav-icon">mail</span>
+
+          <span>お問い合わせ</span>
+        </a>
+      </nav>
+    </div>
+
+    <script>
+      const menuButton = document.getElementById('menuButton')
+      const drawerMenu = document.getElementById('drawerMenu')
+      const drawerOverlay = document.getElementById('drawerOverlay')
+      const drawerClose = document.getElementById('drawerClose')
+      
+      function openDrawer() {
+        drawerMenu.classList.add('show')
+        drawerOverlay.classList.add('show')
+        document.body.style.overflow = 'hidden'
+      }
+      
+      function closeDrawer() {
+        drawerMenu.classList.remove('show')
+        drawerOverlay.classList.remove('show')
+        document.body.style.overflow = ''
+      }
+      
+      if (menuButton) {
+        menuButton.addEventListener('click', openDrawer)
+      }
+      
+      if (drawerClose) {
+        drawerClose.addEventListener('click', closeDrawer)
+      }
+      
+      if (drawerOverlay) {
+        drawerOverlay.addEventListener('click', closeDrawer)
+      }
+    </script>
+
+    {% block scripts %}
+
+    {% endblock %}
+  </body>
+</html>

@@ -1,0 +1,45 @@
+{% extends 'public_base.html' %}
+
+{% block title %}
+  キャンセル確認 | くれよんママ
+{% endblock %}
+
+{% block content %}
+  <section class="apply-page complete-page">
+    <div class="complete-card cancel-confirm-card">
+      <div class="cancel-warning-icon">
+        <span class="material-symbols-outlined">warning</span>
+      </div>
+
+      <h1 class="complete-title">申込をキャンセルしますか？</h1>
+
+      <p class="complete-text">
+        以下のお申込みをキャンセルします。<br />
+        内容をご確認ください。
+      </p>
+
+      <div class="cancel-confirm-box">
+        <div class="cancel-confirm-row">
+          <span>イベント</span>
+          <strong>{{ application.event_title }}</strong>
+        </div>
+
+        <div class="cancel-confirm-row">
+          <span>開催日</span>
+          <strong>{{ application.event_date }}</strong>
+        </div>
+
+        <div class="cancel-confirm-row">
+          <span>お名前</span>
+          <strong>{{ application.parent_name }}</strong>
+        </div>
+      </div>
+
+      <form method="POST" class="cancel-action-form">
+        <button type="submit" class="cancel-danger-button">キャンセルする</button>
+      </form>
+
+      <a href="{{ url_for('index') }}" class="cancel-back-button">やめる</a>
+    </div>
+  </section>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}
+  メンバー管理 | くれよんママ
+{% endblock %}
+
+{% block content %}
+<section class="admin-users-page">
+
+  <h1 class="section-title">
+    メンバー管理
+  </h1>
+
+  <div style="margin-bottom: 16px;">
+    <a
+      href="{{ url_for('admin_user_new') }}"
+      class="primary-button"
+      style="display:inline-block;text-align:center;"
+    >
+      ＋ メンバー追加
+    </a>
+  </div>
+
+  <div class="list-card">
+
+    {% for user in users %}
+
+      <div class="simple-row">
+
+        <div class="simple-row-left">
+
+          <div class="avatar-circle">
+            👤
+          </div>
+
+          <div>
+            <div class="row-title">
+              {{ user.name }}
+            </div>
+
+            <div class="row-sub">
+              {{ user.email }} / {{ user.role }}
+            </div>
+          </div>
+
+        </div>
+
+        <div class="user-action-group">
+
+          <a
+            href="{{ url_for('admin_user_edit', user_id=user.id) }}"
+            class="user-action-link edit"
+          >
+            編集
+          </a>
+
+          <a
+            href="{{ url_for('admin_user_password', user_id=user.id) }}"
+            class="user-action-link password"
+          >
+            PW変更
+          </a>
+
+          <form
+            method="POST"
+            action="{{ url_for('admin_user_delete', user_id=user.id) }}"
+            onsubmit="return confirm('このメンバーを削除しますか？');"
+            class="user-action-form"
+          >
+
+            <button
+              type="submit"
+              class="user-action-link delete"
+            >
+              削除
+            </button>
+
+          </form>
+
+        </div>
+
+      </div>
+
+    {% else %}
+
+      <div class="empty-state">
+        メンバーはまだ登録されていません
+      </div>
+
+    {% endfor %}
+
+  </div>
+
+</section>
+{% endblock %}

@@ -1,0 +1,21 @@
+cancel_complete.html{% extends 'public_base.html' %}
+
+{% block title %}
+キャンセル完了 | くれよんママ
+{% endblock %}
+
+{% block content %}
+<section class="complete-page">
+  <div class="complete-card">
+    <div class="complete-icon">✓</div>
+    <h1 class="complete-title">キャンセルを受け付けました</h1>
+    <p class="complete-text">
+      お申込みのキャンセルが完了しました。
+    </p>
+
+    <a href="{{ url_for('index') }}" class="primary-button">
+      ホームへ戻る
+    </a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,223 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}
+  イベント管理 | くれよんママ
+{% endblock %}
+
+{% block content %}
+  <section class="admin-events-page">
+    <div class="admin-page-head">
+      <div>
+        <h1 class="section-title">イベント管理</h1>
+        <p class="page-lead">イベントの作成・編集・公開状態・申込状況を管理できます。</p>
+      </div>
+    </div>
+
+    <form method="GET" action="{{ url_for('admin_events') }}" class="admin-filter-row">
+      <select name="year" class="admin-filter-select" onchange="this.form.submit()">
+        <option value="">年度:すべて</option>
+        {% for year in year_list %}
+          <option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>
+            {{ year }}年
+          </option>
+        {% endfor %}
+      </select>
+
+      <select name="month" class="admin-filter-select" onchange="this.form.submit()">
+        <option value="">月:すべて</option>
+        {% for month in range(1, 13) %}
+          <option value="{{ '%02d' % month }}" {% if selected_month == ('%02d' % month) %}selected{% endif %}>
+            {{ month }}月
+          </option>
+        {% endfor %}
+      </select>
+
+      <a
+        href="{{ url_for('admin_events') }}"
+        class="admin-filter-reset-small {% if selected_year or selected_month %}active{% endif %}"
+      >
+        リセット
+      </a>
+    </form>
+
+    <div class="admin-event-list">
+      {% for event in events %}
+        <div class="admin-event-card">
+          <div class="admin-event-thumb">
+            {% if event.flyer_image %}
+              <img src="{{ event.flyer_image }}" alt="{{ event.title }}">
+            {% else %}
+              <div class="admin-event-thumb-placeholder">
+                <span class="material-symbols-outlined">calendar_month</span>
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="admin-event-main">
+            <div class="admin-event-badges">
+              {% if event.category %}
+                <span class="admin-event-category">{{ event.category }}</span>
+              {% endif %}
+
+              {% if event.status == '公開' %}
+                <span class="admin-event-status is-public">公開中</span>
+              {% else %}
+                <span class="admin-event-status is-draft">下書き</span>
+              {% endif %}
+            </div>
+
+            <div class="admin-event-title">{{ event.title }}</div>
+
+            <div class="admin-event-meta-list">
+              <div class="admin-event-meta-item">
+                <span class="material-symbols-outlined">calendar_month</span>
+                {{ event.event_date }}
+              </div>
+
+              <div class="admin-event-meta-item">
+                <span class="material-symbols-outlined">groups</span>
+                申込 {{ event.application_count }}/{{ event.capacity or 0 }}組
+              </div>
+            </div>
+            <div class="admin-event-status-row">
+             {% if event.is_finished %}
+
+                <span class="admin-event-capacity-badge finished">
+                  開催終了
+                </span>
+
+              {% elif event.remaining_count == 0 %}
+
+                <span class="admin-event-capacity-badge full">
+                  満員
+                </span>
+
+              {% elif event.remaining_count <= 2 %}
+
+                <span class="admin-event-capacity-badge low">
+                  残りわずか
+                </span>
+
+              {% else %}
+
+                <span class="admin-event-capacity-badge open">
+                  受付中
+                </span>
+
+              {% endif %}
+              {% if event.waiting_count and event.waiting_count > 0 %}
+                <span class="admin-event-capacity-badge waiting">
+                  待機 {{ event.waiting_count }}組
+                </span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="admin-event-menu-wrap">
+            <button
+              type="button"
+              class="admin-event-menu-button"
+              onclick="toggleEventMenu({{ event.id }})"
+              aria-label="イベント操作メニュー"
+            >
+            
+              <span class="material-symbols-outlined">more_vert</span>
+            </button>
+
+            <div id="eventMenu{{ event.id }}" class="admin-event-dropdown">
+              <a href="{{ url_for('admin_event_edit', event_id=event.id) }}">
+                <span class="material-symbols-outlined">edit</span>
+                編集
+              </a>
+
+              <a href="/admin/applications?event_id={{ event.id }}">
+                <span class="material-symbols-outlined">fact_check</span>
+                申込一覧
+              </a>
+
+              <form method="POST" action="{{ url_for('admin_event_toggle_status', event_id=event.id) }}">
+                <button type="submit">
+                  {% if event.status == '公開' %}
+                    <span class="material-symbols-outlined">visibility_off</span>
+                    下書きにする
+                  {% else %}
+                    <span class="material-symbols-outlined">visibility</span>
+                    公開する
+                  {% endif %}
+                </button>
+              </form>
+
+              <form method="POST" action="{{ url_for('admin_event_duplicate', event_id=event.id) }}">
+                <button type="submit">
+                  <span class="material-symbols-outlined">content_copy</span>
+                  複製する
+                </button>
+              </form>
+              <form
+                method="GET"
+                action="{{ url_for('survey_qr', event_id=event.id) }}"
+                target="_blank"
+              >
+                <button type="submit">
+                  <span class="material-symbols-outlined">
+                    qr_code_2
+                  </span>
+
+                  QR表示
+                </button>
+              </form>
+              
+
+              <form method="POST"
+                    action="{{ url_for('admin_event_delete', event_id=event.id) }}"
+                    onsubmit="return confirm('このイベントを削除しますか？\\n申込や画像があるイベントは削除できません。');">
+
+                  <button type="submit" class="danger-btn">
+                      <span class="material-symbols-outlined">delete</span>
+                      イベント削除
+                  </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">
+            <span class="material-symbols-outlined">event_busy</span>
+          </div>
+          <p>イベントはまだ登録されていません</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <a href="/admin/events/new" class="admin-floating-add-button">
+      <span class="material-symbols-outlined">add</span>
+    </a>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    function toggleEventMenu(eventId) {
+      const target = document.getElementById("eventMenu" + eventId);
+
+      document.querySelectorAll(".admin-event-dropdown").forEach((menu) => {
+        if (menu !== target) {
+          menu.classList.remove("show");
+        }
+      });
+
+      if (target) {
+        target.classList.toggle("show");
+      }
+    }
+
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest(".admin-event-menu-wrap")) {
+        document.querySelectorAll(".admin-event-dropdown").forEach((menu) => {
+          menu.classList.remove("show");
+        });
+      }
+    });
+  </script>
+{% endblock %}

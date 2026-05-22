@@ -1,0 +1,215 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}
+  管理ダッシュボード | くれよんママ
+{% endblock %}
+
+{% block content %}
+  <section>
+    <h1 class="section-title">ダッシュボード</h1>
+
+    <div class="backup-area">
+      <a href="{{ url_for('admin_backup') }}" class="backup-btn">DBバックアップをダウンロード</a>
+    </div>
+
+    <div class="stats-grid">
+      <a href="{{ url_for('admin_events') }}" class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon icon-pink">
+            <span class="material-symbols-outlined">calendar_month</span>
+          </div>
+          <div>
+            <div class="stat-value">{{ stats.upcoming_events }}</div>
+            <div class="stat-label">今後のイベント</div>
+          </div>
+        </div>
+      </a>
+
+      <a href="{{ url_for('admin_applications') }}" class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon icon-green">
+            <span class="material-symbols-outlined">description</span>
+          </div>
+          <div>
+            <div class="stat-value">{{ stats.total_applications }}</div>
+            <div class="stat-label">申込件数</div>
+          </div>
+        </div>
+      </a>
+
+      <a href="{{ url_for('admin_contacts') }}" class="stat-card {% if stats.unread_contacts > 0 %}alert{% endif %}">
+        <div class="stat-top">
+          <div class="stat-icon icon-yellow">
+            <span class="material-symbols-outlined">mail</span>
+          </div>
+          <div>
+            <div class="stat-value">{{ stats.unread_contacts }}</div>
+            <div class="stat-label">お問い合わせ</div>
+          </div>
+        </div>
+      </a>
+
+      <a href="{{ url_for('admin_users') }}" class="stat-card">
+        <div class="stat-top">
+          <div class="stat-icon icon-purple">
+            <span class="material-symbols-outlined">groups</span>
+          </div>
+          <div>
+            <div class="stat-value">{{ stats.admin_users }}</div>
+            <div class="stat-label">管理メンバー</div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <section style="margin-top: 24px;">
+    <h2 class="section-title">管理メニュー</h2>
+
+    <div class="action-list">
+      <a href="{{ url_for('admin_members_page') }}" class="action-link bg-green-soft">
+        <div class="action-link-left">
+          <div class="action-link-icon">
+            <span class="material-symbols-outlined">groups</span>
+          </div>
+          <div>
+            <div class="row-title">紹介ページ編集</div>
+            <div class="row-sub">活動紹介文の編集</div>
+          </div>
+        </div>
+        <div>›</div>
+      </a>
+
+      <a href="{{ url_for('admin_events') }}" class="action-link bg-pink-soft">
+        <div class="action-link-left">
+          <div class="action-link-icon">
+            <span class="material-symbols-outlined">calendar_month</span>
+          </div>
+          <div>
+            <div class="row-title">イベント管理</div>
+            <div class="row-sub">イベントの作成・編集・公開管理</div>
+          </div>
+        </div>
+        <div>›</div>
+      </a>
+
+      <a href="{{ url_for('admin_event_images') }}" class="action-link bg-yellow-soft">
+        <div class="action-link-left">
+          <div class="action-link-icon">
+            <span class="material-symbols-outlined">photo_library</span>
+          </div>
+          <div>
+            <div class="row-title">活動記録管理</div>
+            <div class="row-sub">写真の追加・編集</div>
+          </div>
+        </div>
+        <div>›</div>
+      </a>
+
+      <a href="{{ url_for('admin_applications') }}" class="action-link bg-green-soft">
+        <div class="action-link-left">
+          <div class="action-link-icon">
+            <span class="material-symbols-outlined">fact_check</span>
+          </div>
+          <div>
+            <div class="row-title">申込一覧</div>
+            <div class="row-sub">申込状況の確認と管理</div>
+          </div>
+        </div>
+        <div>›</div>
+      </a>
+      <a href="{{ url_for('admin_mail_logs') }}" class="action-link bg-blue-soft">
+        <div class="action-link-left">
+          <div class="action-link-icon">
+            <span class="material-symbols-outlined">outgoing_mail</span>
+          </div>
+
+          <div>
+            <div class="row-title">送信履歴</div>
+            <div class="row-sub">参加者へ送信したメール履歴</div>
+          </div>
+        </div>
+
+        <div>›</div>
+      </a>
+      <a href="{{ url_for('admin_surveys') }}" class="action-link bg-yellow-soft">
+        <div class="action-link-left">
+          <div class="action-link-icon">
+            <span class="material-symbols-outlined">rate_review</span>
+          </div>
+
+          <div>
+            <div class="row-title">アンケート一覧</div>
+            <div class="row-sub">イベントごとの回答を確認</div>
+          </div>
+        </div>
+
+        <div>›</div>
+      </a>
+
+      <a href="{{ url_for('admin_contacts') }}" class="action-link bg-blue-soft">
+        <div class="action-link-left">
+          <div class="action-link-icon">
+            <span class="material-symbols-outlined">mail</span>
+          </div>
+          <div>
+            <div class="row-title">お問い合わせ一覧</div>
+            <div class="row-sub">問い合わせ内容の確認</div>
+          </div>
+        </div>
+        <div>›</div>
+      </a>
+
+      <a href="{{ url_for('admin_users') }}" class="action-link bg-purple-soft">
+        <div class="action-link-left">
+          <div class="action-link-icon">
+            <span class="material-symbols-outlined">manage_accounts</span>
+          </div>
+          <div>
+            <div class="row-title">メンバー管理</div>
+            <div class="row-sub">管理メンバーの追加・編集</div>
+          </div>
+        </div>
+        <div>›</div>
+      </a>
+    </div>
+  </section>
+
+  <section style="margin-top: 24px;">
+    <div class="section-head-row">
+      <h2 class="section-title">最近の申込</h2>
+      <a href="{{ url_for('admin_applications') }}" class="section-more-link">一覧はこちら</a>
+    </div>
+
+    {% if recent_applications %}
+      <div class="list-card">
+        {% for app in recent_applications %}
+          <div class="simple-row">
+            <div class="simple-row-left">
+              <div class="avatar-circle">{{ app.name[:1] }}</div>
+              <div>
+                <div class="row-title">{{ app.name }}</div>
+                <div class="row-sub">{{ app.event_name }} ・ {{ app.applied_at }}</div>
+              </div>
+            </div>
+
+            {% if app.status == 'confirmed' %}
+              <span class="badge badge-confirmed">確定</span>
+            {% elif app.status == 'waiting' %}
+              <span class="badge badge-waiting">待機</span>
+            {% else %}
+              <span class="badge badge-cancelled">取消</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="soft-card empty-state">
+        <div class="empty-icon">
+          <span class="material-symbols-outlined">fact_check</span>
+        </div>
+        <p>まだ申込はありません</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}

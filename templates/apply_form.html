@@ -1,0 +1,281 @@
+{% extends 'public_base.html' %}
+
+{% block title %}
+  イベント申込 | {{ event.title }}
+{% endblock %}
+
+{% block content %}
+  <section class="apply-page">
+    <div class="apply-topbar">
+      <a href="{{ url_for('event_detail', event_id=event.id) }}" class="apply-back">‹</a>
+      <h1 class="apply-page-title">イベント申込</h1>
+    </div>
+
+    <div class="apply-stepper">
+      <div class="apply-step active">
+        <div class="apply-step-circle">1</div>
+        <div class="apply-step-label active">入力</div>
+      </div>
+      <div class="apply-step-line"></div>
+      <div class="apply-step">
+        <div class="apply-step-circle">2</div>
+        <div class="apply-step-label">確認</div>
+      </div>
+      <div class="apply-step-line"></div>
+      <div class="apply-step">
+        <div class="apply-step-circle">3</div>
+        <div class="apply-step-label">完了</div>
+      </div>
+    </div>
+
+    <div class="apply-event-mini-card">
+      <div class="apply-event-thumb">
+        <span class="material-symbols-outlined">palette</span>
+      </div>
+      <div class="apply-event-mini-body">
+        <div class="apply-event-mini-title">{{ event.title }}</div>
+        <div class="apply-event-mini-date">
+          <span class="material-symbols-outlined inline-icon">calendar_month</span>
+
+          {{ event.event_date }} {{ event.start_time or '10:00' }}〜
+        </div>
+      </div>
+    </div>
+
+    <form method="POST" class="apply-form-wrap">
+      <div class="apply-card">
+        <div class="apply-card-title-row">
+          <h2 class="apply-card-title pink">保護者情報</h2>
+          <span class="apply-required-badge">必須</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">お名前</label>
+          <input type="text" name="parent_name" class="form-input" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">メールアドレス</label>
+          <input type="email" name="email" class="form-input" required />
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">電話番号</label>
+          <input type="text" name="phone" class="form-input" required />
+        </div>
+      </div>
+
+      <div class="apply-card">
+        <h2 class="apply-card-title yellow">参加人数</h2>
+        <div class="form-group">
+          <label class="form-label">参加時間</label>
+
+          <select name="time_slot" class="form-select" required>
+            <option value="1">① {{ event.time1_start }} 〜 {{ event.time1_end }}</option>
+
+            {% if event.time2_start and event.time2_end %}
+              <option value="2">② {{ event.time2_start }} 〜 {{ event.time2_end }}</option>
+            {% endif %}
+          </select>
+        </div>
+
+        <div class="apply-count-grid">
+          <div class="form-group">
+            <label class="form-label">大人人数</label>
+            <select name="adult_count" id="adult_count" class="form-select" required>
+              <option value="">選択</option>
+              <option value="1">1人</option>
+              <option value="2">2人</option>
+              <option value="3">3人</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">子ども人数</label>
+            <select name="child_count" id="child_count" class="form-select" required onchange="toggleChildrenFields()">
+              <option value="">選択</option>
+              <option value="1">1人</option>
+              <option value="2">2人</option>
+              <option value="3">3人</option>
+              <option value="4">4人</option>
+              <option value="5">5人</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="apply-card">
+        <h2 class="apply-card-title yellow">お子様情報</h2>
+
+        <div id="children-fields">
+          <div class="child-card" id="child1_block" style="display:none;">
+            <div class="child-card-title">お子様 1</div>
+
+            <div class="form-group">
+              <label class="form-label">お名前</label>
+              <input type="text" name="child1_name" class="form-input" />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">年齢</label>
+              <select name="child1_age" class="form-select">
+                <option value="">選択</option>
+                <option value="0歳">0歳</option>
+                <option value="1歳">1歳</option>
+                <option value="2歳">2歳</option>
+                <option value="3歳">3歳</option>
+                <option value="4歳">4歳</option>
+                <option value="5歳">5歳</option>
+                <option value="6歳">6歳</option>
+                <option value="小学生以上">小学生以上</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="child-card" id="child2_block" style="display:none;">
+            <div class="child-card-title">お子様 2</div>
+
+            <div class="form-group">
+              <label class="form-label">お名前</label>
+              <input type="text" name="child2_name" class="form-input" />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">年齢</label>
+              <select name="child2_age" class="form-select">
+                <option value="">選択</option>
+                <option value="0歳">0歳</option>
+                <option value="1歳">1歳</option>
+                <option value="2歳">2歳</option>
+                <option value="3歳">3歳</option>
+                <option value="4歳">4歳</option>
+                <option value="5歳">5歳</option>
+                <option value="6歳">6歳</option>
+                <option value="小学生以上">小学生以上</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="child-card" id="child3_block" style="display:none;">
+            <div class="child-card-title">お子様 3</div>
+
+            <div class="form-group">
+              <label class="form-label">お名前</label>
+              <input type="text" name="child3_name" class="form-input" />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">年齢</label>
+              <select name="child3_age" class="form-select">
+                <option value="">選択</option>
+                <option value="0歳">0歳</option>
+                <option value="1歳">1歳</option>
+                <option value="2歳">2歳</option>
+                <option value="3歳">3歳</option>
+                <option value="4歳">4歳</option>
+                <option value="5歳">5歳</option>
+                <option value="6歳">6歳</option>
+                <option value="小学生以上">小学生以上</option>
+              </select>
+            </div>
+          </div>
+          <div class="child-card" id="child4_block" style="display:none;">
+            <div class="child-card-title">お子様 4</div>
+
+            <div class="form-group">
+              <label class="form-label">お名前</label>
+              <input type="text" name="child4_name" class="form-input" />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">年齢</label>
+              <select name="child4_age" class="form-select">
+                <option value="">選択</option>
+                <option value="0歳">0歳</option>
+                <option value="1歳">1歳</option>
+                <option value="2歳">2歳</option>
+                <option value="3歳">3歳</option>
+                <option value="4歳">4歳</option>
+                <option value="5歳">5歳</option>
+                <option value="6歳">6歳</option>
+                <option value="小学生以上">小学生以上</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="child-card" id="child5_block" style="display:none;">
+            <div class="child-card-title">お子様 5</div>
+
+            <div class="form-group">
+              <label class="form-label">お名前</label>
+              <input type="text" name="child5_name" class="form-input" />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">年齢</label>
+              <select name="child5_age" class="form-select">
+                <option value="">選択</option>
+                <option value="0歳">0歳</option>
+                <option value="1歳">1歳</option>
+                <option value="2歳">2歳</option>
+                <option value="3歳">3歳</option>
+                <option value="4歳">4歳</option>
+                <option value="5歳">5歳</option>
+                <option value="6歳">6歳</option>
+                <option value="小学生以上">小学生以上</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="child-add-button" onclick="addOneChild()">＋ お子様を追加する</button>
+      </div>
+
+      <div class="apply-card notice-card">
+        <h2 class="apply-card-title notice">ご注意事項</h2>
+
+        <ul class="notice-list">
+          <li>予約優先ですが、当日参加も可能です</li>
+          <li>キャンセルはメールのURLから行えます</li>
+          <li>満席の場合は待機リストへの登録となります</li>
+          <li>繰り上げ当選はメールでご連絡します</li>
+        </ul>
+
+        <label class="agree-check">
+          <input type="checkbox" name="agree" required />
+          <span>注意事項に同意する</span>
+        </label>
+      </div>
+
+      <button type="submit" class="apply-submit-button">確認画面へ</button>
+    </form>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    function toggleChildrenFields() {
+      const childCount = parseInt(document.getElementById('child_count').value || 0)
+    
+      for (let i = 1; i <= 5; i++) {
+        const block = document.getElementById(`child${i}_block`)
+        if (block) {
+          block.style.display = i <= childCount ? 'block' : 'none'
+        }
+      }
+    }
+    
+    function addOneChild() {
+      const select = document.getElementById('child_count')
+      let current = parseInt(select.value || 0)
+    
+      if (current < 5) {
+        current += 1
+        select.value = current
+        toggleChildrenFields()
+      }
+    }
+    
+    window.addEventListener('load', toggleChildrenFields)
+  </script>
+{% endblock %}

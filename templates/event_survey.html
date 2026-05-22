@@ -1,0 +1,30 @@
+{% extends 'public_base.html' %}
+
+{% block title %}
+  アンケート
+{% endblock %}
+
+{% block content %}
+  <section class="survey-page">
+    <h1>{{ event.title }}</h1>
+
+    <p>ご参加ありがとうございました。</p>
+
+    <form method="POST" class="survey-form">
+      <label>満足度</label>
+
+      <select name="satisfaction">
+        <option>とても良かった</option>
+        <option>良かった</option>
+        <option>普通</option>
+        <option>改善してほしい</option>
+      </select>
+
+      <label>ご感想</label>
+
+      <textarea name="comment" rows="6"></textarea>
+
+      <button type="submit">送信</button>
+    </form>
+  </section>
+{% endblock %}

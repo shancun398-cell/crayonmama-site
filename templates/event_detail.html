@@ -1,0 +1,229 @@
+{% extends 'public_base.html' %}
+
+{% block title %}
+  {{ event.title }} | くれよんママ
+{% endblock %}
+
+{% block header %}
+
+{% endblock %}
+
+{% block content %}
+  <section class="event-detail-page">
+    <div class="detail-hero">
+      <a href="{{ url_for('events') }}" class="detail-back-button">‹</a>
+
+      <div class="detail-hero-image detail-flyer-preview-wrap">
+        {% if event.flyer_image %}
+          <img src="{{ event.flyer_image }}" alt="{{ event.title }} チラシ" class="detail-flyer-preview-img" />
+
+          <button type="button" class="detail-flyer-open-button" onclick="openFlyerModal()">チラシを見る</button>
+        {% elif event.image_url %}
+          <img src="{{ event.image_url }}" alt="{{ event.title }} チラシ" class="detail-flyer-preview-img" />
+        {% else %}
+          <div class="detail-hero-placeholder">🎨</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="detail-main-card">
+      <div class="detail-badges">
+        <span class="detail-pill detail-pill-pink">{{ event.category }}</span>
+
+        {% if remaining == 0 %}
+          <span class="detail-pill detail-pill-red">満員</span>
+        {% else %}
+          <span class="detail-pill detail-pill-green">受付中</span>
+        {% endif %}
+      </div>
+
+      <h1 class="detail-main-title">{{ event.title }}</h1>
+
+      <div class="detail-info-list">
+        <div class="detail-info-item">
+          <div class="detail-info-icon">
+            <span class="material-symbols-outlined">calendar_month</span>
+          </div>
+
+          <div>
+            <div class="detail-info-label">開催日時</div>
+
+            <div class="detail-info-value">
+              {{ event.event_date }}
+
+              <div class="event-time-list">
+                <div class="event-time-item">① {{ event.time1_start }}〜{{ event.time1_end }}</div>
+
+                {% if event.time2_start and event.time2_end %}
+                  <div class="event-time-item">② {{ event.time2_start }}〜{{ event.time2_end }}</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-info-item">
+          <div class="detail-info-icon">
+            <span class="material-symbols-outlined">location_on</span>
+          </div>
+
+          <div>
+            <div class="detail-info-label">開催場所</div>
+
+            <div class="detail-info-value">{{ event.location or '会場未設定' }}</div>
+          </div>
+        </div>
+
+        <div class="detail-info-item">
+          <div class="detail-info-icon">
+            <span class="material-symbols-outlined">groups</span>
+          </div>
+
+          <div>
+            <div class="detail-info-label">定員</div>
+
+            <div class="detail-info-value">
+              {% if event.capacity %}
+                {{ event.capacity }}組
+              {% else %}
+                未設定
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-progress-box">
+        <div class="detail-progress-title">申込状況</div>
+
+        <div class="detail-time-status-list">
+          <div class="detail-time-status-item">
+            <div class="detail-time-status-head">
+              <span class="detail-time-label">開催時間①</span>
+
+              <span class="detail-time-value">{{ event.time1_start }}〜{{ event.time1_end }}</span>
+            </div>
+
+            <div class="detail-time-meta">定員 {{ capacity1 }}組 ／ 残り {{ remaining_time1 }}組</div>
+
+            <div class="detail-time-state {% if remaining_time1 <= 0 %}full{% endif %}">
+              {% if remaining_time1 <= 0 %}
+                キャンセル待ち受付
+              {% else %}
+                受付中
+              {% endif %}
+            </div>
+          </div>
+
+          {% if event.time2_start and event.time2_end %}
+            <div class="detail-time-status-item">
+              <div class="detail-time-status-head">
+                <span class="detail-time-label">開催時間②</span>
+
+                <span class="detail-time-value">{{ event.time2_start }}〜{{ event.time2_end }}</span>
+              </div>
+
+              <div class="detail-time-meta">定員 {{ capacity2 }}組 ／ 残り {{ remaining_time2 }}組</div>
+
+              <div class="detail-time-state {% if remaining_time2 <= 0 %}full{% endif %}">
+                {% if remaining_time2 <= 0 %}
+                  キャンセル待ち受付
+                {% else %}
+                  受付中
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% if event.flyer_image %}
+      <div id="flyerModal" class="flyer-modal" onclick="closeFlyerModal(event)">
+        <div class="flyer-modal-content">
+          <button type="button" class="flyer-modal-close" onclick="closeFlyerModalButton()">×</button>
+
+          <img src="{{ event.flyer_image }}" class="flyer-modal-image" />
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="detail-section-card">
+      <h2 class="detail-section-title">イベント内容</h2>
+
+      <div class="detail-description-text">{{ event.description or '音楽に合わせて体を動かしたり、絵本の読み聞かせ、手遊びを楽しみましょう。初めての方も大歓迎です。' }}</div>
+
+      <div class="detail-divider"></div>
+
+      <div class="detail-sub-title">持ち物</div>
+
+      <ul class="detail-check-list">
+        {% if event.belongings %}
+          {% for item in event.belongings.split(',') %}
+            <li>{{ item.strip() }}</li>
+          {% endfor %}
+        {% else %}
+          <li>飲み物</li>
+          <li>着替え</li>
+        {% endif %}
+      </ul>
+
+      {% if event.additional_notes %}
+        <div class="detail-divider"></div>
+
+        <div class="detail-sub-title">その他案内事項</div>
+
+        <div class="detail-description-text">{{ event.additional_notes }}</div>
+      {% endif %}
+    </div>
+
+    <div class="detail-survey-card">
+      <div>
+        <div class="detail-survey-title">アンケートにご協力ください</div>
+
+        <div class="detail-survey-sub">参加後のご感想をお聞かせください</div>
+      </div>
+
+      <a href="#" class="detail-survey-link">回答する ›</a>
+    </div>
+
+    {% if remaining == 0 %}
+      <div class="full-message">現在満員です（キャンセル待ち受付中）</div>
+
+      <a href="{{ url_for('apply_form', event_id=event.id) }}" class="detail-apply-button">✎ キャンセル待ちで申し込む</a>
+    {% else %}
+      <a href="{{ url_for('apply_form', event_id=event.id) }}" class="detail-apply-button">✎ 申し込む</a>
+    {% endif %}
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    function openFlyerModal() {
+      const modal = document.getElementById('flyerModal')
+    
+      if (modal) {
+        modal.classList.add('show')
+        document.body.style.overflow = 'hidden'
+      }
+    }
+    
+    function closeFlyerModal(e) {
+      if (e.target.id === 'flyerModal') {
+        const modal = document.getElementById('flyerModal')
+    
+        modal.classList.remove('show')
+        document.body.style.overflow = ''
+      }
+    }
+    
+    function closeFlyerModalButton() {
+      const modal = document.getElementById('flyerModal')
+    
+      if (modal) {
+        modal.classList.remove('show')
+        document.body.style.overflow = ''
+      }
+    }
+  </script>
+{% endblock %}

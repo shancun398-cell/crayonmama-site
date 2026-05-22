@@ -1,0 +1,208 @@
+{% extends "admin_base.html" %}
+
+{% block title %}
+  活動記録管理 | くれよんママ
+{% endblock %}
+
+{% block content %}
+<section class="admin-photo-page">
+
+  <div class="admin-page-head">
+    <div>
+      <h1 class="section-title">活動記録管理</h1>
+      <p class="page-lead">
+        イベントごとの写真・動画を登録し、公開側の活動記録に表示します。
+      </p>
+    </div>
+  </div>
+
+  <section class="admin-section-card">
+    <div class="admin-section-head">
+      <div class="admin-section-icon">
+        <span class="material-symbols-outlined">event</span>
+      </div>
+      <div>
+        <h2 class="admin-section-title">イベント選択</h2>
+        <p class="admin-section-sub">写真・動画を管理するイベントを選択してください</p>
+      </div>
+    </div>
+
+    <form method="GET" action="{{ url_for('admin_event_images') }}" class="photo-manage-filter-form">
+
+      <select
+        name="year"
+        class="photo-manage-select modern-select"
+        onchange="this.form.submit()"
+      >
+        <option value="">年度：すべて</option>
+
+        {% for year in year_list %}
+          <option
+            value="{{ year }}"
+            {% if selected_year == year %}selected{% endif %}
+          >
+            {{ year }}年
+          </option>
+        {% endfor %}
+      </select>
+
+      <select
+        name="event_id"
+        class="photo-manage-select modern-select"
+        onchange="this.form.submit()"
+      >
+        {% for event in events %}
+          <option
+            value="{{ event.id }}"
+            {% if selected_event_id == (event.id | string) %}selected{% endif %}
+          >
+            {{ event.category }}{% if event.title %}（{{ event.title }}）{% endif %}
+          </option>
+        {% endfor %}
+      </select>
+
+    </form>
+
+    {% if selected_event %}
+      <div class="selected-event-info">
+        <span class="material-symbols-outlined">calendar_month</span>
+        <span>開催日：{{ selected_event.event_date }}</span>
+      </div>
+    {% endif %}
+  </section>
+<div class="media-upload-grid">
+  <div class="photo-upload-card">
+    <div class="photo-upload-icon">
+    <span class="material-symbols-outlined">
+        cloud_upload
+    </span>
+    </div>
+    <div class="photo-upload-title">写真をアップロード</div>
+    <div class="photo-upload-sub">最大30枚 / 自動圧縮なし</div>
+
+    <form method="POST"
+            action="{{ url_for('upload_event_images') }}"
+            enctype="multipart/form-data">
+
+        <input type="hidden" name="event_id" value="{{ selected_event_id }}">
+
+       <input type="file"
+        id="photo-file-input"
+        name="images"
+        multiple
+        accept="image/*"
+        class="photo-file-input">
+
+    <div class="photo-upload-actions">
+        <label for="photo-file-input" class="photo-upload-button">
+            ファイルを選択
+        </label>
+
+        <button type="submit" class="photo-save-button">
+            写真を保存する
+        </button>
+</div>
+    </form>
+    </div>
+  <section class="admin-section-card">
+    <div class="admin-section-head">
+      <div class="admin-section-icon">
+        <span class="material-symbols-outlined">movie</span>
+      </div>
+      <div>
+        <h2 class="admin-section-title">活動動画</h2>
+        <p class="admin-section-sub">mp4動画を1本まで登録できます</p>
+      </div>
+    </div>
+
+    <form
+      method="POST"
+      action="{{ url_for('upload_event_video') }}"
+      enctype="multipart/form-data"
+      class="admin-sub-form"
+    >
+      <input type="hidden" name="event_id" value="{{ selected_event_id }}">
+
+      <input
+        type="file"
+        id="video-file-input"
+        name="video"
+        accept="video/mp4"
+        class="photo-file-input"
+      >
+
+      <div class="youtube-form-row">
+        <label for="video-file-input" class="admin-upload-button">
+          <span class="material-symbols-outlined">video_library</span>
+          動画を選択
+        </label>
+
+        <button type="submit" class="youtube-save-button">
+          保存
+        </button>
+      </div>
+    </form>
+
+    {% if selected_event and selected_event.video_path %}
+      <div class="admin-video-preview">
+        <video controls class="admin-video-player">
+          <source src="{{ selected_event.video_path }}" type="video/mp4">
+        </video>
+
+        <form
+          method="POST"
+          action="{{ url_for('delete_event_video', event_id=selected_event.id) }}"
+        >
+          <button type="submit" class="admin-video-delete-button">
+            動画を削除
+          </button>
+        </form>
+      </div>
+    {% endif %}
+  </section>
+</div>
+
+  <section class="admin-section-card">
+    <div class="admin-section-head admin-section-head-between">
+      <div class="admin-section-head-left">
+        <div class="admin-section-icon">
+          <span class="material-symbols-outlined">photo_library</span>
+        </div>
+        <div>
+          <h2 class="admin-section-title">登録済み写真</h2>
+          <p class="admin-section-sub">{{ images|length }}/30 枚 登録中</p>
+        </div>
+      </div>
+    </div>
+
+    {% if images %}
+      <div class="registered-photos-grid">
+        {% for image in images %}
+          <div class="registered-photo-item">
+            <img src="{{ image.image_path }}" alt="登録写真">
+
+            <form
+              method="POST"
+              action="{{ url_for('delete_event_image', image_id=image.id) }}"
+              class="photo-delete-form"
+              onsubmit="return confirm('この写真を削除しますか？');"
+            >
+              <button type="submit" class="photo-delete-button">
+                ×
+              </button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">
+          <span class="material-symbols-outlined">imagesmode</span>
+        </div>
+        <p>まだ写真は登録されていません</p>
+      </div>
+    {% endif %}
+  </section>
+
+</section>
+{% endblock %}

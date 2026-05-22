@@ -1,0 +1,115 @@
+{% extends 'public_base.html' %}
+
+{% block title %}
+  申込確認
+{% endblock %}
+
+{% block content %}
+  <section class="apply-page confirm-page">
+    <div class="apply-topbar">
+      <a href="javascript:history.back()" class="apply-back">‹</a>
+      <h1 class="apply-page-title">イベント申込</h1>
+    </div>
+
+    <div class="apply-stepper">
+      <div class="apply-step done">
+        <div class="apply-step-circle">✓</div>
+        <div class="apply-step-label done-label">入力</div>
+      </div>
+
+      <div class="apply-step-line active-line"></div>
+
+      <div class="apply-step active">
+        <div class="apply-step-circle">2</div>
+        <div class="apply-step-label active">確認</div>
+      </div>
+
+      <div class="apply-step-line"></div>
+
+      <div class="apply-step">
+        <div class="apply-step-circle">3</div>
+        <div class="apply-step-label">完了</div>
+      </div>
+    </div>
+
+    <div class="apply-event-mini-card confirm-mini-card">
+      <div class="apply-event-thumb">
+        <span class="material-symbols-outlined">palette</span>
+      </div>
+      <div class="apply-event-mini-body">
+        <div class="apply-event-mini-title">{{ event.title }}</div>
+        <div class="apply-event-mini-date">
+          {{ event.event_date }}
+
+          {% if data.time_slot == '2' %}
+            ② {{ event.time2_start }}〜{{ event.time2_end }}
+          {% else %}
+            ① {{ event.time1_start }}〜{{ event.time1_end }}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="confirm-card">
+      <h2 class="confirm-card-title">申込内容の確認</h2>
+
+      <div class="confirm-table">
+        <div class="confirm-row">
+          <span class="confirm-key">保護者名</span>
+          <span class="confirm-value">{{ data.parent_name }}</span>
+        </div>
+
+        <div class="confirm-row">
+          <span class="confirm-key">メール</span>
+          <span class="confirm-value">{{ data.email }}</span>
+        </div>
+
+        <div class="confirm-row">
+          <span class="confirm-key">電話番号</span>
+          <span class="confirm-value">{{ data.phone }}</span>
+        </div>
+
+        <div class="confirm-row">
+          <span class="confirm-key">大人人数</span>
+          <span class="confirm-value">{{ data.adult_count }}人</span>
+        </div>
+
+        <div class="confirm-row">
+          <span class="confirm-key">子ども人数</span>
+          <span class="confirm-value">{{ data.child_count }}人</span>
+        </div>
+
+        {% for i in range(1, 6) %}
+          {% set child_name_key = 'child' ~ i ~ '_name' %}
+          {% set child_age_key = 'child' ~ i ~ '_age' %}
+          {% if data.get(child_name_key) %}
+            <div class="confirm-row">
+              <span class="confirm-key">お子様{{ i }}</span>
+              <span class="confirm-value">{{ data.get(child_name_key) }}（{{ data.get(child_age_key) }}）</span>
+            </div>
+          {% endif %}
+        {% endfor %}
+
+        <div class="confirm-row no-border">
+          <span class="confirm-key">申込ステータス</span>
+          {% if status == 'waiting' %}
+            <span class="confirm-status waiting">キャンセル待ち</span>
+          {% else %}
+            <span class="confirm-status">予約確定</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('apply_complete', event_id=event.id) }}">
+      {% for key, value in data.items() %}
+        <input type="hidden" name="{{ key }}" value="{{ value }}" />
+      {% endfor %}
+
+      <div class="confirm-buttons confirm-buttons-slim">
+        <button type="button" onclick="history.back()" class="confirm-edit-button">修正する</button>
+        <button type="submit" class="confirm-submit-button">申し込む</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

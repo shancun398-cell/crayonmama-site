@@ -1,0 +1,79 @@
+{% extends 'public_base.html' %}
+
+{% block title %}
+  申込完了
+{% endblock %}
+
+{% block content %}
+  <section class="apply-page complete-page">
+    <div class="apply-topbar">
+      <a href="{{ url_for('index') }}" class="apply-back">‹</a>
+      <h1 class="apply-page-title">イベント申込</h1>
+    </div>
+
+    <div class="apply-stepper">
+      <div class="apply-step done">
+        <div class="apply-step-circle">✓</div>
+        <div class="apply-step-label">入力</div>
+      </div>
+      <div class="apply-step-line"></div>
+      <div class="apply-step done">
+        <div class="apply-step-circle">✓</div>
+        <div class="apply-step-label">確認</div>
+      </div>
+      <div class="apply-step-line"></div>
+      <div class="apply-step active">
+        <div class="apply-step-circle">3</div>
+        <div class="apply-step-label active">完了</div>
+      </div>
+    </div>
+
+    <div class="complete-card">
+      <div class="complete-icon-wrap">
+        <div class="complete-icon">✓</div>
+      </div>
+
+      {% if status == 'waiting' %}
+        <h2 class="complete-title">キャンセル待ちを受け付けました</h2>
+        <p class="complete-text">
+          現在満員のため、キャンセル待ちとして受付しました。<br />
+          確認メールを送信しましたのでご確認ください。
+        </p>
+      {% else %}
+        <h2 class="complete-title">お申し込みありがとうございます！</h2>
+        <p class="complete-text">
+          お申し込みを受け付けました。<br />
+          確認メールを送信しましたのでご確認ください。
+        </p>
+      {% endif %}
+
+      <div class="complete-event-box">
+        <div class="complete-event-label">申込イベント</div>
+        <div class="complete-event-title">{{ event.title }}</div>
+        <div class="apply-event-mini-date">
+          <span class="material-symbols-outlined inline-icon">calendar_month</span>
+
+          {{ event.event_date }} {{ event.start_time or '10:00' }}〜
+        </div>
+      </div>
+
+      <div class="complete-note-box">
+        <div class="complete-note-title">今後の流れ</div>
+        <ul class="complete-note-list">
+          {% if status == 'waiting' %}
+            <li>キャンセル待ちの受付メールをご確認ください</li>
+            <li>キャンセルが出た場合は、待ち順で自動的に繰り上がります</li>
+            <li>繰り上がった際はメールでご連絡いたします</li>
+            <li>キャンセル時はメール内の案内をご利用ください</li>
+          {% else %}
+            <li>申込内容の確認メールをご確認ください</li>
+            <li>キャンセル時はメール内の案内をご利用ください</li>
+            <li>当日は開始10分前を目安にお越しください</li>
+          {% endif %}
+        </ul>
+      </div>
+
+      <a href="{{ url_for('index') }}" class="complete-home-button">ホームに戻る</a>
+    </div>
+  </section>
+{% endblock %}

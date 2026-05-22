@@ -1,0 +1,63 @@
+{% extends 'public_base.html' %}
+
+{% block title %}
+  活動記録 | くれよんママ
+{% endblock %}
+
+{% block content %}
+  <section class="archive-page">
+    <section class="archive-header-block">
+      <div class="archive-back-row">
+        <a href="{{ url_for('index') }}" class="archive-back-button">‹</a>
+        <h1 class="archive-page-title">過去のイベント</h1>
+      </div>
+    </section>
+
+   <section class="archive-filter-wrap">
+
+    <form method="GET" action="{{ url_for('archive') }}">
+      <select name="year"
+              class="archive-year-select"
+              onchange="this.form.submit()">
+
+        <option value="">すべて</option>
+
+        {% for year in year_list %}
+        <option value="{{ year }}"
+          {% if selected_year == year %}selected{% endif %}>
+          {{ year }}年度
+        </option>
+        {% endfor %}
+
+      </select>
+  </form>
+
+</section>
+
+    <section class="archive-grid">
+      {% for event in archive_events %}
+        <a href="{{ url_for('archive_detail', event_id=event.id) }}" class="archive-card">
+          <div class="archive-card-image">
+            {% if event.thumbnail %}
+              <img src="{{ event.thumbnail }}" alt="{{ event.title }}" />
+            {% else %}
+              <div class="archive-card-placeholder">
+                <span class="material-symbols-outlined">
+                  imagesmode
+                </span>
+              </div>
+            {% endif %}
+
+            <div class="archive-card-overlay">
+              {% if event.category %}
+                <div class="archive-card-category">{{ event.category }}</div>
+              {% endif %}
+              <div class="archive-card-title">{{ event.title }}</div>
+              <div class="archive-card-date">{{ event.event_date }}</div>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </section>
+  </section>
+{% endblock %}

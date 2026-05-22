@@ -1,0 +1,216 @@
+{% extends "admin_base.html" %}
+
+{% block title %}イベント編集{% endblock %}
+
+{% block content %}
+<h1 class="section-title">イベント編集</h1>
+
+<div class="form-card">
+    <form method="POST" enctype="multipart/form-data">
+
+        <div class="form-group">
+            <label class="form-label">活動名</label>
+            <input type="text" name="category" class="form-input" value="{{ event.category }}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">イベント名</label>
+            <input type="text" name="title" class="form-input" value="{{ event.title }}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">イベントチラシ（任意・1枚）</label>
+
+            {% if event.flyer_image %}
+                <div class="admin-flyer-preview">
+                    <img
+                        src="{{ event.flyer_image }}"
+                        alt="イベントチラシ"
+                        onclick="openFlyerPreview()"
+                    >
+                </div>
+
+                <button type="submit"
+                    form="deleteFlyerForm"
+                    class="danger-button"
+                    onclick="return confirm('チラシを削除しますか？');">
+                    チラシを削除
+                </button>
+            {% else %}
+                <input type="file" name="flyer_image" class="form-input" accept="image/*">
+            {% endif %}
+        </div>
+
+{% if event.flyer_image %}
+<div id="adminFlyerModal" class="admin-flyer-modal" onclick="closeFlyerPreview(event)">
+    <div class="admin-flyer-modal-content">
+        <button type="button" class="admin-flyer-modal-close" onclick="closeFlyerPreviewButton()">×</button>
+        <img src="{{ event.flyer_image }}" alt="イベントチラシ拡大">
+    </div>
+</div>
+{% endif %}
+        <div class="form-group">
+        <label class="form-label">開催日</label>
+
+    {% if event.event_date < today %}
+        <input type="date"
+               name="date"
+               class="form-input"
+               value="{{ event.event_date }}"
+               disabled>
+
+        <input type="hidden" name="date" value="{{ event.event_date }}">
+
+        <div class="form-help">
+            実施日を過ぎたイベントは、活動記録との混同を防ぐため開催日は変更できません。
+        </div>
+    {% else %}
+        <input type="date"
+               name="date"
+               class="form-input"
+               value="{{ event.event_date }}"
+               required>
+    {% endif %}
+   <div class="form-group">
+    <label class="form-label">開催時間①</label>
+
+    <div class="time-range-row">
+
+        <input
+            type="time"
+            name="time1_start"
+            class="form-input"
+            value="{{ event.time1_start or '10:00' }}"
+        >
+
+        <span class="time-range-separator">〜</span>
+
+        <input
+            type="time"
+            name="time1_end"
+            class="form-input"
+            value="{{ event.time1_end or '11:00' }}"
+        >
+
+    </div>
+</div>
+
+<div class="form-group">
+    <label class="form-label">定員①</label>
+
+    <input
+        type="number"
+        name="capacity_time1"
+        class="form-input"
+        value="{{ event.capacity_time1 or 10 }}"
+    >
+</div>
+
+<div class="form-group">
+    <label class="form-label">開催時間②（任意）</label>
+
+    <div class="time-range-row">
+
+        <input
+            type="time"
+            name="time2_start"
+            class="form-input"
+            value="{{ event.time2_start or '' }}"
+        >
+
+        <span class="time-range-separator">〜</span>
+
+        <input
+            type="time"
+            name="time2_end"
+            class="form-input"
+            value="{{ event.time2_end or '' }}"
+        >
+
+    </div>
+</div>
+
+<div class="form-group">
+    <label class="form-label">定員②</label>
+
+    <input
+        type="number"
+        name="capacity_time2"
+        class="form-input"
+        value="{{ event.capacity_time2 or '' }}"
+    >
+</div>
+</div>
+
+        <div class="form-group">
+            <label class="form-label">状態</label>
+            <select name="status" class="form-select">
+                <option value="公開" {% if event.status=="公開" %}selected{% endif %}>公開</option>
+                <option value="下書き" {% if event.status=="下書き" %}selected{% endif %}>下書き</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">開催場所</label>
+            <input type="text" name="location" class="form-input" value="{{ event.location or '' }}">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">定員</label>
+            <input type="number" name="capacity" class="form-input" value="{{ event.capacity }}">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">説明</label>
+            <textarea name="description" class="form-textarea">{{ event.description }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">持ち物</label>
+            <input type="text" name="belongings" class="form-input" value="{{ event.belongings or '' }}" placeholder="例：飲み物, 着替え, タオル">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">その他案内事項（任意）</label>
+            <textarea name="additional_notes" class="form-textarea" placeholder="駐車場、注意事項、雨天時の案内など">{{ event.additional_notes or '' }}</textarea>
+        </div>
+
+        <button type="submit" class="primary-button">変更を保存する</button>
+        
+    </form>
+    <form
+  id="deleteFlyerForm"
+  method="POST"
+  action="{{ url_for('admin_event_delete_flyer', event_id=event.id) }}">
+</form>
+
+{% endblock %}
+{% block scripts %}
+<script>
+function openFlyerPreview() {
+    const modal = document.getElementById("adminFlyerModal");
+
+    if (modal) {
+        modal.classList.add("show");
+        document.body.style.overflow = "hidden";
+    }
+}
+
+function closeFlyerPreview(e) {
+    if (e.target.id === "adminFlyerModal") {
+        const modal = document.getElementById("adminFlyerModal");
+        modal.classList.remove("show");
+        document.body.style.overflow = "";
+    }
+}
+
+function closeFlyerPreviewButton() {
+    const modal = document.getElementById("adminFlyerModal");
+
+    if (modal) {
+        modal.classList.remove("show");
+        document.body.style.overflow = "";
+    }
+}
+</script>
+{% endblock %}
