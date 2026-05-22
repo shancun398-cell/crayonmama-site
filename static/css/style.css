@@ -9260,3 +9260,41 @@ img {
     min-height: 96px;
     line-height: 1.8;
 }
+.event-belongings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.event-belonging-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.event-belonging-check {
+    width: 34px;
+    height: 34px;
+
+    border-radius: 999px;
+
+    background: #4fd37b;
+
+    color: #ffffff;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 18px;
+    font-weight: 900;
+
+    flex-shrink: 0;
+}
+
+.event-belonging-text {
+    font-size: 18px;
+    font-weight: 700;
+
+    color: #1f2b46;
+}
