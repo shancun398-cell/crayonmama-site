@@ -9239,17 +9239,20 @@ img {
     color: #eb5fa7;
 }
 .login-back-link {
-    display: block;
+    display: block !important;
+
     margin-top: 18px;
 
     text-align: center;
-    font-size: 14px;
-    font-weight: 700;
 
-    color: #8a95aa;
+    color: #8a95aa !important;
+
+    font-size: 14px;
+    font-weight: 800;
+
     text-decoration: none;
 }
 
 .login-back-link:hover {
-    color: #eb5fa7;
+    color: #eb5fa7 !important;
 }
