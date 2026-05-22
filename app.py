@@ -2849,6 +2849,7 @@ def admin_event_new():
 
         capacity_time1 = request.form.get("capacity_time1")
         capacity_time2 = request.form.get("capacity_time2")
+        belongings = request.form.get("belongings")
 
         flyer_image = None
 
@@ -2869,9 +2870,9 @@ def admin_event_new():
             """
                 INSERT INTO events (
                     category, title, flyer_image, event_date,
-                    status, capacity, description, location, time1_start, time1_end, time2_start, time2_end, capacity_time1, capacity_time2
+                    status, capacity, description, location, time1_start, time1_end, time2_start, time2_end, capacity_time1, capacity_time2,belongings
                 )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
             (
                 category,
@@ -2890,6 +2891,7 @@ def admin_event_new():
                 capacity,
                 description,
                 location,
+                belongings,
 
             ),
         )
@@ -2981,7 +2983,8 @@ def admin_event_edit(event_id):
                 status = ?,
                 capacity = ?,
                 description = ?,
-                location = ?
+                location = ?,
+                belongings = ?
             WHERE id = ?
         """,
             (
@@ -2999,6 +3002,7 @@ def admin_event_edit(event_id):
                 request.form.get("capacity"),
                 request.form.get("description"),
                 request.form.get("location"),
+                request.form.get("belongings"),
                 event_id,
 
             ),
