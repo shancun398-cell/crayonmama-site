@@ -1,0 +1,146 @@
+{% extends 'public_base.html' %}
+
+{% block title %}
+  活動・メンバー紹介 | くれよんママ
+{% endblock %}
+
+{% block content %}
+<section class="members-page">
+
+  <section class="members-hero-image-wrap">
+    <a href="{{ url_for('index') }}" class="members-back-button">‹</a>
+
+    <div class="members-hero-image">
+      {% if page and page.main_image %}
+        <img src="{{ page.main_image }}" alt="活動紹介">
+      {% else %}
+        <img src="{{ url_for('static', filename='images/activity_main.jpg') }}" alt="活動紹介">
+      {% endif %}
+
+      <div class="members-hero-overlay">
+        <h1 class="members-hero-title">
+          {{ page.title if page else '活動・メンバー紹介' }}
+        </h1>
+        <h1 class="members-hero-title">くれよんママ</h1>
+      </div>
+    </div>
+  </section>
+
+  <section class="members-info-card">
+    <div class="members-info-badge">活動について</div>
+
+    <div class="members-info-text">
+      {{ page.body if page else 'くれよんママは、音楽・絵本・手遊びを通して、親子の笑顔とつながりを育む活動を行っています。' }}
+    </div>
+
+    <div class="members-info-list">
+      <div class="members-info-item">
+        <div class="members-info-icon">
+      <span class="material-symbols-outlined">
+        music_note
+      </span>
+    </div>
+        <div>
+          <div class="members-info-label">内容</div>
+          <div class="members-info-value">音楽・絵本・手遊び</div>
+        </div>
+      </div>
+
+      <div class="members-info-item">
+        <div class="members-info-icon">
+          <span class="material-symbols-outlined">
+            location_on
+          </span>
+        </div>
+        <div>
+          <div class="members-info-label">開催場所</div>
+          <div class="members-info-value">都城市(要相談)</div>
+        </div>
+      </div>
+
+      <div class="members-info-item">
+        <div class="members-info-icon">
+          <span class="material-symbols-outlined">
+            groups
+          </span>
+        </div>
+        <div>
+          <div class="members-info-label">メンバー</div>
+          <div class="members-info-value">全スタッフ参加</div>
+        </div>
+      </div>
+
+      <div class="members-info-item">
+        <div class="members-info-icon">
+          <span class="material-symbols-outlined">
+            schedule
+          </span>
+        </div>
+        <div>
+          <div class="members-info-label">所要時間</div>
+          <div class="members-info-value">約90分(相談可)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="members-staff-section">
+    <h2 class="members-section-title green-bar">スタッフ紹介</h2>
+
+    <div class="members-staff-list">
+      {% if public_members %}
+        {% for member in public_members %}
+          <div class="members-staff-card">
+            <div class="members-staff-avatar staff-pink">
+              {% if member.image_path %}
+                <img src="{{ member.image_path }}" alt="{{ member.name }}">
+              {% else %}
+               <span class="material-symbols-outlined">
+                {{ member.icon or 'person' }}
+              </span>
+              {% endif %}
+            </div>
+
+            <div class="members-staff-body">
+              <div class="members-staff-name">{{ member.name }}</div>
+              <div class="members-staff-role">{{ member.role }}</div>
+              <div class="members-staff-text">{{ member.comment }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">メンバー紹介は準備中です</div>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if gallery_images %}
+    <section class="members-gallery-section">
+
+      <div class="members-section-header">
+        <h2 class="members-section-title pink-bar">
+          活動の様子
+        </h2>
+
+        <a href="{{ url_for('archive') }}"
+          class="members-archive-link">
+          これまでの活動を見る →
+        </a>
+      </div>
+
+      <div class="members-gallery-grid">
+        {% for image in gallery_images %}
+          <div class="members-gallery-item">
+            <img src="{{ image.image_path }}" alt="活動の様子">
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  <a href="{{ url_for('events') }}" class="members-fixed-button">
+    イベントを見る
+  </a>
+
+</section>
+{% endblock %}

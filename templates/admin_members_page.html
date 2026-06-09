@@ -1,0 +1,243 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}
+  活動・メンバー紹介編集
+{% endblock %}
+
+{% block content %}
+  <form id="membersPageForm" method="POST" enctype="multipart/form-data"></form>
+
+  <div class="admin-page-head">
+    <div>
+      <h1 class="section-title">活動・メンバー紹介編集</h1>
+      <p class="page-lead">公開ページに表示する紹介文・メイン画像・活動写真・メンバー情報を編集できます。</p>
+    </div>
+  </div>
+
+  <section class="admin-section-card">
+    <div class="admin-section-head">
+      <div class="admin-section-icon">
+        <span class="material-symbols-outlined">edit_note</span>
+      </div>
+      <div>
+        <h2 class="admin-section-title">ページ情報</h2>
+        <p class="admin-section-sub">タイトル・紹介文・メイン画像</p>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">ページタイトル</label>
+      <input type="text" name="title" class="form-input" value="{{ page.title }}" required form="membersPageForm" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">活動紹介メイン画像</label>
+
+      {% if page.main_image %}
+        <div class="admin-image-preview">
+          <img src="{{ page.main_image }}" alt="活動紹介メイン画像" onclick="openMainImageModal()" style="cursor:pointer;" />
+        </div>
+
+        <button type="submit" form="deleteMainImageForm" class="danger-button" onclick="return confirm('メイン画像を削除しますか？');">メイン画像を削除</button>
+      {% else %}
+        <input type="file" name="main_image" class="form-input" accept="image/*" form="membersPageForm" />
+      {% endif %}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">活動紹介文</label>
+      <textarea name="body" class="form-textarea" rows="8" form="membersPageForm">{{ page.body }}</textarea>
+    </div>
+  </section>
+
+  <form id="deleteMainImageForm" method="POST" action="{{ url_for('admin_members_main_image_delete') }}"></form>
+
+  {% if page.main_image %}
+    <div id="mainImageModal" class="admin-flyer-modal" onclick="closeMainImageModal(event)">
+      <div class="admin-flyer-modal-content">
+        <button type="button" class="admin-flyer-modal-close" onclick="closeMainImageModalButton()">×</button>
+        <img src="{{ page.main_image }}" alt="活動紹介メイン画像" />
+      </div>
+    </div>
+  {% endif %}
+
+  <section class="admin-section-card">
+    <div class="admin-section-head">
+      <div class="admin-section-icon">
+        <span class="material-symbols-outlined">photo_library</span>
+      </div>
+      <div>
+        <h2 class="admin-section-title">活動の様子</h2>
+        <p class="admin-section-sub">画像をドラッグして並び替えできます</p>
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin_member_gallery_add') }}" enctype="multipart/form-data" class="admin-sub-form">
+      <div class="form-group">
+        <label class="form-label">画像を追加</label>
+        <input type="file" name="gallery_image" class="form-input" accept="image/*" required />
+      </div>
+
+      <button type="submit" class="primary-button">画像を追加する</button>
+    </form>
+
+    <input type="hidden" name="gallery_order" id="galleryOrderInput" form="membersPageForm" />
+
+    <div class="admin-gallery-grid sortable-gallery" id="sortableGallery">
+      {% for image in gallery_images %}
+        <div class="admin-gallery-item sortable-item" data-id="{{ image.id }}">
+          <img src="{{ image.image_path }}" alt="活動の様子" />
+
+          <div class="drag-handle">
+            <span class="material-symbols-outlined">drag_indicator</span>
+          </div>
+
+          <form method="POST" action="{{ url_for('admin_member_gallery_delete', image_id=image.id) }}" onsubmit="return confirm('この画像を削除しますか？');">
+            <button type="submit" class="photo-delete-button">×</button>
+          </form>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">
+            <span class="material-symbols-outlined">imagesmode</span>
+          </div>
+          <p>活動の様子の画像はまだ登録されていません</p>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="admin-section-card">
+    <div class="admin-section-head admin-section-head-between">
+      <div class="admin-section-head-left">
+        <div class="admin-section-icon">
+          <span class="material-symbols-outlined">groups</span>
+        </div>
+        <div>
+          <h2 class="admin-section-title">メンバー紹介</h2>
+          <p class="admin-section-sub">公開ページに表示するメンバー情報</p>
+        </div>
+      </div>
+
+      <a href="{{ url_for('admin_public_member_new') }}" class="admin-add-button">
+        <span class="material-symbols-outlined">add</span>
+        追加
+      </a>
+    </div>
+
+    <div class="list-card">
+      {% for member in members %}
+        <div class="simple-row">
+          <div class="simple-row-left">
+            <div class="avatar-circle">
+              {% if member.image_path %}
+                <img src="{{ member.image_path }}" alt="{{ member.name }}" />
+              {% else %}
+                <span class="material-symbols-outlined">{{ member.icon or 'person' }}</span>
+              {% endif %}
+            </div>
+
+            <div>
+              <div class="row-title">{{ member.name }}</div>
+              <div class="row-sub">{{ member.role }}</div>
+            </div>
+          </div>
+
+          <div class="admin-row-actions">
+            <a href="{{ url_for('admin_public_member_edit', member_id=member.id) }}" class="admin-text-link">編集</a>
+
+            <form method="POST" action="{{ url_for('admin_public_member_delete', member_id=member.id) }}" onsubmit="return confirm('このメンバーを削除しますか？');" style="margin:0;">
+              <button type="submit" class="admin-danger-link">削除</button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">
+            <span class="material-symbols-outlined">person_add</span>
+          </div>
+          <p>公開メンバーはまだ登録されていません</p>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <div class="admin-bottom-save">
+    <button type="button" class="primary-button" onclick="updateGalleryOrder(); document.getElementById('membersPageForm').submit();">変更を保存する</button>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    let draggedItem = null
+    
+    function updateGalleryOrder() {
+      const items = document.querySelectorAll('.sortable-item')
+      const ids = Array.from(items).map((item) => item.dataset.id)
+      const input = document.getElementById('galleryOrderInput')
+    
+      if (input) {
+        input.value = ids.join(',')
+      }
+    }
+    
+    document.querySelectorAll('.sortable-item').forEach((item) => {
+      item.setAttribute('draggable', 'true')
+    
+      item.addEventListener('dragstart', function () {
+        draggedItem = this
+        this.classList.add('dragging')
+      })
+    
+      item.addEventListener('dragend', function () {
+        this.classList.remove('dragging')
+        draggedItem = null
+        updateGalleryOrder()
+      })
+    
+      item.addEventListener('dragover', function (e) {
+        e.preventDefault()
+    
+        if (!draggedItem || draggedItem === this) {
+          return
+        }
+    
+        const gallery = document.getElementById('sortableGallery')
+        const items = Array.from(gallery.querySelectorAll('.sortable-item'))
+        const draggedIndex = items.indexOf(draggedItem)
+        const targetIndex = items.indexOf(this)
+    
+        if (draggedIndex < targetIndex) {
+          this.after(draggedItem)
+        } else {
+          this.before(draggedItem)
+        }
+      })
+    })
+    
+    function openMainImageModal() {
+      const modal = document.getElementById('mainImageModal')
+      if (modal) {
+        modal.classList.add('show')
+        document.body.style.overflow = 'hidden'
+      }
+    }
+    
+    function closeMainImageModal(e) {
+      if (e.target.id === 'mainImageModal') {
+        e.target.classList.remove('show')
+        document.body.style.overflow = ''
+      }
+    }
+    
+    function closeMainImageModalButton() {
+      const modal = document.getElementById('mainImageModal')
+      if (modal) {
+        modal.classList.remove('show')
+        document.body.style.overflow = ''
+      }
+    }
+    
+    window.addEventListener('load', updateGalleryOrder)
+  </script>
+{% endblock %}

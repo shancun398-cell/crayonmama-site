@@ -1,0 +1,88 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}
+  送信履歴 | くれよんママ
+{% endblock %}
+
+{% block content %}
+  <section class="admin-mail-log-page">
+    <div class="admin-page-head">
+      <div>
+        <h1 class="section-title">送信履歴</h1>
+        <p class="page-lead">イベントごとに送信したメール履歴を確認できます。</p>
+      </div>
+    </div>
+
+    {% if grouped_logs %}
+      <div class="applications-group-list">
+        {% for group in grouped_logs %}
+          <section class="applications-event-group">
+            <div class="applications-event-group-head">
+              <div>
+                <div class="applications-group-title">{{ group.event_title }}</div>
+
+                <div class="applications-group-sub">送信履歴 {{ group.count }}件</div>
+              </div>
+            </div>
+
+            <div class="applications-group-actions">
+              <button type="button" class="applications-group-toggle-button" onclick="toggleMailLogGroup('mail-log-group-{{ group.event_id }}', 'mail-log-icon-{{ group.event_id }}')">
+                <span>履歴を開く</span>
+                <span id="mail-log-icon-{{ group.event_id }}" class="material-symbols-outlined">expand_more</span>
+              </button>
+            </div>
+
+            <div id="mail-log-group-{{ group.event_id }}" class="applications-group-body" style="display:none;">
+              {% for log in group.logs %}
+                <article class="mail-log-card">
+                  <div class="mail-log-top">
+                    <div>
+                      <div class="mail-log-subject">{{ log.subject }}</div>
+                    </div>
+
+                    <div class="mail-log-date">{{ log.created_at[:16] }}</div>
+                  </div>
+
+                  <div class="mail-log-meta">
+                    <span class="mail-log-target">対象：{{ log.target }}</span>
+
+                    <span class="mail-log-count">{{ log.sent_count }}件送信</span>
+                  </div>
+
+                  <div class="mail-log-message">{{ log.message }}</div>
+                </article>
+              {% endfor %}
+            </div>
+          </section>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="soft-card empty-state">
+        <div class="empty-icon">
+          <span class="material-symbols-outlined">mail</span>
+        </div>
+
+        <p>送信履歴はまだありません</p>
+      </div>
+    {% endif %}
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    function toggleMailLogGroup(contentId, iconId) {
+      const content = document.getElementById(contentId)
+      const icon = document.getElementById(iconId)
+    
+      if (!content || !icon) return
+    
+      if (content.style.display === 'none' || content.style.display === '') {
+        content.style.display = 'block'
+        icon.textContent = 'expand_less'
+      } else {
+        content.style.display = 'none'
+        icon.textContent = 'expand_more'
+      }
+    }
+  </script>
+{% endblock %}

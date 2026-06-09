@@ -1,0 +1,60 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}
+  メンバー管理 | くれよんママ
+{% endblock %}
+
+{% block content %}
+  <section class="admin-users-page">
+
+    <div class="section-header-row">
+      <h1 class="section-title">メンバー管理</h1>
+      <a href="{{ url_for('admin_user_new') }}" class="primary-button">＋ メンバー追加</a>
+    </div>
+
+    <div class="user-grid">
+      {% for user in users %}
+        <div class="user-card">
+          <div class="user-list-left">
+            <div class="user-avatar">
+              <span class="material-symbols-outlined">person</span>
+            </div>
+            <div class="user-list-info">
+              <div class="user-list-name">{{ user.name }}</div>
+              <div class="user-list-meta">{{ user.email }}</div>
+            </div>
+            <span class="user-role-badge {% if user.role == 'admin' %}badge-admin{% else %}badge-member{% endif %}">
+              {{ '管理者' if user.role == 'admin' else 'メンバー' }}
+            </span>
+          </div>
+
+          <div class="user-list-actions">
+            <a href="{{ url_for('admin_user_edit', user_id=user.id) }}" class="user-action-link edit">
+              <span class="material-symbols-outlined" style="font-size:15px;">edit</span>
+              編集
+            </a>
+            <a href="{{ url_for('admin_user_password', user_id=user.id) }}" class="user-action-link password">
+              <span class="material-symbols-outlined" style="font-size:15px;">lock</span>
+              PW変更
+            </a>
+            <form method="POST" action="{{ url_for('admin_user_delete', user_id=user.id) }}"
+                  onsubmit="return confirm('このメンバーを削除しますか？');" style="margin:0;">
+              <button type="submit" class="user-action-link delete" style="border:none; cursor:pointer;">
+                <span class="material-symbols-outlined" style="font-size:15px;">delete</span>
+                削除
+              </button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <div class="empty-state" style="padding: 48px; grid-column: 1 / -1;">
+          <div class="empty-icon">
+            <span class="material-symbols-outlined">group_off</span>
+          </div>
+          <p>メンバーはまだ登録されていません</p>
+        </div>
+      {% endfor %}
+    </div>
+
+  </section>
+{% endblock %}

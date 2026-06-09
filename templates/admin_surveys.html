@@ -1,0 +1,140 @@
+{% extends "admin_base.html" %}
+
+{% block title %}
+  アンケート一覧
+{% endblock %}
+
+{% block content %}
+<section class="admin-page">
+
+  <div class="admin-page-head">
+    <div>
+      <h1 class="section-title">アンケート一覧</h1>
+      <p class="page-lead">開催終了したイベントのアンケート回答を確認できます。</p>
+    </div>
+  </div>
+
+  <section class="admin-section-card">
+    <div class="admin-section-head">
+      <div class="admin-section-icon">
+        <span class="material-symbols-outlined">filter_alt</span>
+      </div>
+      <div>
+        <h2 class="admin-section-title">絞り込み</h2>
+        <p class="admin-section-sub">年度で絞り込みできます</p>
+      </div>
+    </div>
+
+    <form method="GET" action="{{ url_for('admin_surveys') }}" class="admin-filter-row">
+        
+      <select name="year" class="admin-filter-select" onchange="this.form.submit()">
+        <option value="">年度：すべて</option>
+
+        {% for row in year_list %}
+          <option value="{{ row.year }}" {% if selected_year == row.year %}selected{% endif %}>
+            {{ row.year }}年
+          </option>
+        {% endfor %}
+      </select>
+      <select
+        name="event_id"
+        class="admin-filter-select"
+        onchange="this.form.submit()"
+        >
+        <option value="">
+            イベント：すべて
+        </option>
+
+        {% for event in event_list %}
+
+            <option
+            value="{{ event.id }}"
+            {% if selected_event_id == event.id|string %}
+                selected
+            {% endif %}
+            >
+            {{ event.event_date }} ｜ {{ event.title }}
+            </option>
+
+        {% endfor %}
+
+        </select>
+
+      <a href="{{ url_for('admin_surveys') }}" class="admin-filter-reset-small">
+        リセット
+      </a>
+    </form>
+  </section>
+
+  {% if grouped_surveys %}
+    <div class="survey-group-list">
+
+      {% for group in grouped_surveys %}
+        <section class="survey-event-group">
+
+          <button
+            type="button"
+            class="survey-group-head"
+            onclick="toggleSurveyGroup('survey-{{ group.event_id }}', 'survey-icon-{{ group.event_id }}')"
+          >
+            <div>
+              <div class="survey-group-title">{{ group.event_title }}</div>
+              <div class="survey-group-sub">
+                {{ group.event_date }} ・ {{ group.count }}件
+              </div>
+            </div>
+
+            <span id="survey-icon-{{ group.event_id }}" class="material-symbols-outlined">
+              expand_more
+            </span>
+          </button>
+
+          <div id="survey-{{ group.event_id }}" class="survey-group-body" style="display:none;">
+            {% for survey in group["items"] %}
+              <div class="survey-admin-card">
+                <div class="survey-admin-score">
+                  {{ survey.satisfaction }}
+                </div>
+
+                <div class="survey-admin-comment">
+                  {{ survey.comment or 'コメントなし' }}
+                </div>
+
+                <div class="survey-admin-date">
+                  {{ survey.created_at }}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+        </section>
+      {% endfor %}
+
+    </div>
+  {% else %}
+    <div class="soft-card empty-state">
+      <p>アンケート回答はまだありません</p>
+    </div>
+  {% endif %}
+
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleSurveyGroup(contentId, iconId) {
+  const content = document.getElementById(contentId);
+  const icon = document.getElementById(iconId);
+
+  if (!content || !icon) return;
+
+  if (content.style.display === "none" || content.style.display === "") {
+    content.style.display = "block";
+    icon.textContent = "expand_less";
+  } else {
+    content.style.display = "none";
+    icon.textContent = "expand_more";
+  }
+}
+</script>
+{% endblock %}

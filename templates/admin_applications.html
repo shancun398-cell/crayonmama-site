@@ -1,0 +1,514 @@
+{% extends "admin_base.html" %}
+
+{% block title %}
+  申込一覧 | くれよんママ
+{% endblock %}
+
+{% block content %}
+<section class="admin-applications-page">
+
+  <div class="admin-page-head">
+    <div>
+      <h1 class="section-title">申込一覧</h1>
+      <p class="page-lead">
+        イベントごとの申込状況・待機・キャンセルを確認できます。
+      </p>
+    </div>
+  </div>
+
+  <div class="applications-summary-grid">
+
+    <div class="applications-summary-card">
+      <div class="applications-summary-icon green">
+        <span class="material-symbols-outlined">
+          task_alt
+        </span>
+      </div>
+
+      <div class="applications-summary-value green">
+        {{ summary.confirmed }}
+      </div>
+
+      <div class="applications-summary-label">
+        確定
+      </div>
+    </div>
+
+    <div class="applications-summary-card">
+      <div class="applications-summary-icon yellow">
+        <span class="material-symbols-outlined">
+          schedule
+        </span>
+      </div>
+
+      <div class="applications-summary-value yellow">
+        {{ summary.waiting }}
+      </div>
+
+      <div class="applications-summary-label">
+        待機
+      </div>
+    </div>
+
+    <div class="applications-summary-card">
+      <div class="applications-summary-icon gray">
+        <span class="material-symbols-outlined">
+          cancel
+        </span>
+      </div>
+
+      <div class="applications-summary-value gray">
+        {{ summary.cancelled }}
+      </div>
+
+      <div class="applications-summary-label">
+        キャンセル
+      </div>
+    </div>
+
+  </div>
+
+  <section class="admin-section-card">
+
+  <div class="admin-section-head">
+    <div class="admin-section-icon">
+      <span class="material-symbols-outlined">
+        filter_alt
+      </span>
+    </div>
+
+    <div>
+      <h2 class="admin-section-title">
+        絞り込み
+      </h2>
+
+      <p class="admin-section-sub">
+        イベント・申込状態で絞り込みできます
+      </p>
+    </div>
+  </div>
+
+  <div class="applications-view-tabs">
+    <a
+      href="{{ url_for('admin_applications', view='upcoming') }}"
+      class="applications-view-tab {% if view_mode == 'upcoming' %}active{% endif %}"
+    >
+      開催予定
+    </a>
+
+    <a
+      href="{{ url_for('admin_applications', view='past') }}"
+      class="applications-view-tab {% if view_mode == 'past' %}active{% endif %}"
+    >
+      過去イベント
+    </a>
+  </div>
+
+  <form
+    method="GET"
+    action="{{ url_for('admin_applications') }}"
+    class="applications-filter-form"
+  >
+    <input type="hidden" name="view" value="{{ view_mode }}">
+
+    <select
+      name="event_id"
+      class="applications-select"
+      onchange="this.form.submit()"
+    >
+      <option value="">
+        すべてのイベント
+      </option>
+
+      {% for event in events %}
+        <option
+          value="{{ event.id }}"
+          {% if selected_event_id == (event.id | string) %}selected{% endif %}
+        >
+          {{ event.title }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <div class="applications-tabs">
+      <a
+        href="{{ url_for('admin_applications', view=view_mode, event_id=selected_event_id, status='all') }}"
+        class="applications-tab {% if selected_status == 'all' %}active{% endif %}"
+      >
+        すべて
+      </a>
+
+      <a
+        href="{{ url_for('admin_applications', view=view_mode, event_id=selected_event_id, status='confirmed') }}"
+        class="applications-tab {% if selected_status == 'confirmed' %}active{% endif %}"
+      >
+        確定
+      </a>
+
+      <a
+        href="{{ url_for('admin_applications', view=view_mode, event_id=selected_event_id, status='waiting') }}"
+        class="applications-tab {% if selected_status == 'waiting' %}active{% endif %}"
+      >
+        待機
+      </a>
+
+      <a
+        href="{{ url_for('admin_applications', view=view_mode, event_id=selected_event_id, status='cancelled') }}"
+        class="applications-tab {% if selected_status == 'cancelled' %}active{% endif %}"
+      >
+        キャンセル
+      </a>
+    </div>
+  </form>
+
+</section>
+
+  {% if grouped_applications %}
+
+  <div class="applications-group-list">
+
+    {% for group in grouped_applications %}
+
+      <section class="applications-event-group">
+
+        <div class="applications-event-group-head">
+
+          <div>
+            <div class="applications-group-title">
+              {{ group.event_title }}
+            </div>
+
+            <div class="applications-group-sub">
+              <div class="applications-group-sub">
+
+          {{ group.event_date }}
+
+          ・
+
+          ① {{ group.time1_count }}組
+
+          {% if group.time2_count > 0 %}
+            ・ ② {{ group.time2_count }}組
+          {% endif %}
+
+          ・ 合計 {{ group.count }}件
+
+        </div>
+            </div>
+          </div>
+
+          <div class="applications-group-right">
+
+            <span class="mini-badge confirmed">
+              確定 {{ group.confirmed_count }}
+            </span>
+
+            <span class="mini-badge waiting">
+              待機 {{ group.waiting_count }}
+            </span>
+
+            {% if group.cancelled_count > 0 %}
+              <span class="mini-badge cancelled">
+                取消 {{ group.cancelled_count }}
+              </span>
+            {% endif %}
+
+          </div>
+
+        </div>
+
+<div class="applications-group-actions">
+
+  <div class="applications-action-row">
+
+    <form
+        method="POST"
+        action="{{ url_for('send_event_reminder', event_id=group.event_id) }}"
+        onsubmit="return confirm('参加者へ前日リマインドメールを送信しますか？');"
+        class="applications-reminder-form"
+    >
+
+        <button type="submit" class="applications-reminder-button">
+            前日リマインド送信
+        </button>
+
+    </form>
+
+    <a
+        href="{{ url_for('admin_event_message', event_id=group.event_id) }}"
+        class="applications-message-button"
+    >
+        参加者へ連絡
+    </a>
+    <a
+        href="{{ url_for('admin_applications_csv', event_id=group.event_id) }}"
+        class="applications-csv-button"
+    >
+        CSV出力
+    </a>
+
+  </div>
+
+  <button
+    type="button"
+    class="applications-group-toggle-button"
+    onclick="toggleApplicationGroup('group-{{ group.event_id }}', 'group-icon-{{ group.event_id }}')"
+  >
+
+    <span>
+      詳細を開く
+    </span>
+
+    <span
+      id="group-icon-{{ group.event_id }}"
+      class="material-symbols-outlined"
+    >
+      expand_more
+    </span>
+
+  </button>
+
+</div>
+
+        <div
+          id="group-{{ group.event_id }}"
+          class="applications-group-body"
+          style="display:none;"
+        >
+
+          {% for app in group["items"] %}
+                    {% if loop.first or app.time_slot != group["items"][loop.index0 - 1].time_slot %}
+            <div class="applications-time-title">
+              {% if app.time_slot == "2" %}
+                開催時間②
+              {% else %}
+                開催時間①
+              {% endif %}
+            </div>
+          {% endif %}
+
+            <div class="applications-item-card {% if app.status == 'cancelled' %}is-cancelled{% endif %}">
+
+              <div class="applications-item-top">
+
+                <div class="applications-card-main-info">
+
+                  <div class="applications-top-badge-row">
+
+                    {% if app.status == "confirmed" %}
+                      <span class="badge badge-confirmed">
+                        確定
+                      </span>
+
+                    {% elif app.status == "waiting" %}
+                      <span class="badge badge-waiting">
+                        待機
+                      </span>
+
+                    {% else %}
+                      <span class="badge badge-cancelled">
+                        キャンセル
+                      </span>
+
+                    {% endif %}
+
+                  </div>
+
+                  <div class="applications-name">
+                    {{ app.parent_name }}
+                  </div>
+
+                </div>
+
+                <div class="applications-top-right">
+                  <div class="applications-date">
+                    {{ app.created_at[:10] if app.created_at else "" }}
+                  </div>
+                </div>
+
+              </div>
+
+              <button
+                type="button"
+                class="applications-detail-toggle"
+                onclick="toggleApplicationDetail('detail-{{ app.id }}', 'detail-icon-{{ app.id }}')"
+              >
+                <span
+                  id="detail-icon-{{ app.id }}"
+                  class="material-symbols-outlined"
+                >
+                  expand_more
+                </span>
+
+                <span>
+                  詳細を見る
+                </span>
+              </button>
+
+              <div
+                id="detail-{{ app.id }}"
+                class="applications-detail-area"
+                style="display:none;"
+              >
+
+                <div class="applications-contact">
+
+                  <a
+                    href="mailto:{{ app.email }}"
+                    class="applications-contact-item"
+                  >
+                    <span class="material-symbols-outlined">
+                      mail
+                    </span>
+
+                    <span>
+                      {{ app.email }}
+                    </span>
+                  </a>
+
+                  <a
+                    href="tel:{{ app.phone }}"
+                    class="applications-contact-item"
+                  >
+                    <span class="material-symbols-outlined">
+                      call
+                    </span>
+
+                    <span>
+                      {{ app.phone }}
+                    </span>
+                  </a>
+
+                </div>
+
+                <div class="applications-children-detail">
+
+                  <div class="applications-detail-title">
+                    参加情報
+                  </div>
+
+                  <div class="applications-child-row">
+                    <span>大人人数</span>
+                    <span>
+                      {{ app.adult_count }}名
+                    </span>
+                  </div>
+
+                  <div class="applications-child-row">
+                    <span>お子様人数</span>
+                    <span>
+                      {{ app.child_count }}名
+                    </span>
+                  </div>
+
+                  {% for i in range(1, 6) %}
+
+                    {% set child_name_key = 'child' ~ i ~ '_name' %}
+                    {% set child_age_key = 'child' ~ i ~ '_age' %}
+
+                    {% if app[child_name_key] %}
+
+                      <div class="applications-child-row">
+                        <span>お子様{{ i }}</span>
+
+                        <span>
+                          {{ app[child_name_key] }}
+                          （{{ app[child_age_key] or '年齢未設定' }}）
+                        </span>
+                      </div>
+
+                    {% endif %}
+
+                  {% endfor %}
+
+                </div>
+
+                {% if app.status != "cancelled" %}
+
+                  <form
+                    method="POST"
+                    action="{{ url_for('admin_application_cancel', application_id=app.id) }}"
+                    onsubmit="return confirm('この申込をキャンセルにしますか？');"
+                  >
+                    <button
+                      type="submit"
+                      class="applications-cancel-button"
+                    >
+                      <span class="material-symbols-outlined">
+                        cancel
+                      </span>
+
+                      キャンセルにする
+                    </button>
+                  </form>
+
+                {% endif %}
+
+              </div>
+
+            </div>
+
+          {% endfor %}
+
+        </div>
+
+      </section>
+
+    {% endfor %}
+
+  </div>
+
+  {% else %}
+
+    <div class="soft-card empty-state">
+
+      <div class="empty-icon">
+        <span class="material-symbols-outlined">
+          description
+        </span>
+      </div>
+
+      <p>
+        申込データがありません
+      </p>
+
+    </div>
+
+  {% endif %}
+
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleApplicationDetail(contentId, iconId) {
+  const content = document.getElementById(contentId);
+  const icon = document.getElementById(iconId);
+
+  if (!content || !icon) return;
+
+  if (content.style.display === "none" || content.style.display === "") {
+    content.style.display = "block";
+    icon.textContent = "expand_less";
+  } else {
+    content.style.display = "none";
+    icon.textContent = "expand_more";
+  }
+}
+
+function toggleApplicationGroup(contentId, iconId) {
+  const content = document.getElementById(contentId);
+  const icon = document.getElementById(iconId);
+
+  if (!content || !icon) return;
+
+  if (content.style.display === "none" || content.style.display === "") {
+    content.style.display = "block";
+    icon.textContent = "expand_less";
+  } else {
+    content.style.display = "none";
+    icon.textContent = "expand_more";
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,149 @@
+{% extends "admin_base.html" %}
+
+{% block title %}
+  {% if member %}公開メンバー編集{% else %}公開メンバー追加{% endif %}
+{% endblock %}
+
+{% block content %}
+<h1 class="section-title">
+  {% if member %}公開メンバー編集{% else %}公開メンバー追加{% endif %}
+</h1>
+
+<div class="form-card">
+  <form method="POST" enctype="multipart/form-data">
+
+    <div class="form-group">
+      <label class="form-label">名前</label>
+      <input
+        type="text"
+        name="name"
+        class="form-input"
+        value="{{ member.name if member else '' }}"
+        required
+      >
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">役割</label>
+      <input
+        type="text"
+        name="role"
+        class="form-input"
+        value="{{ member.role if member else '' }}"
+        placeholder="例：読み聞かせ担当"
+      >
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">紹介文</label>
+      <textarea
+        name="comment"
+        class="form-textarea"
+        rows="5"
+        placeholder="メンバー紹介文を入力"
+      >{{ member.comment if member else '' }}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">プロフィール画像</label>
+
+      {% if member and member.image_path %}
+        <div class="admin-member-image-preview">
+          <img
+            src="{{ member.image_path }}"
+            alt="プロフィール画像"
+            onclick="openMemberImageModal()"
+            style="cursor:pointer;"
+          >
+        </div>
+
+        <button
+          type="submit"
+          form="deleteMemberImageForm"
+          class="danger-button"
+          onclick="return confirm('プロフィール画像を削除しますか？');"
+        >
+          プロフィール画像を削除
+        </button>
+      {% else %}
+        <input
+          type="file"
+          name="image"
+          class="form-input"
+          accept="image/*"
+        >
+      {% endif %}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">表示順</label>
+      <input
+        type="number"
+        name="display_order"
+        class="form-input"
+        value="{{ member.display_order if member else 0 }}"
+      >
+    </div>
+
+    <button type="submit" class="primary-button">
+      {% if member %}更新する{% else %}追加する{% endif %}
+    </button>
+
+  </form>
+</div>
+
+{% if member and member.image_path %}
+  <form
+    id="deleteMemberImageForm"
+    method="POST"
+    action="{{ url_for('admin_public_member_image_delete', member_id=member.id) }}">
+  </form>
+
+  <div
+    id="memberImageModal"
+    class="admin-flyer-modal"
+    onclick="closeMemberImageModal(event)"
+  >
+    <div class="admin-flyer-modal-content">
+      <button
+        type="button"
+        class="admin-flyer-modal-close"
+        onclick="closeMemberImageModalButton()"
+      >
+        ×
+      </button>
+
+      <img src="{{ member.image_path }}" alt="プロフィール画像">
+    </div>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openMemberImageModal() {
+  const modal = document.getElementById("memberImageModal");
+
+  if (modal) {
+    modal.classList.add("show");
+    document.body.style.overflow = "hidden";
+  }
+}
+
+function closeMemberImageModal(e) {
+  if (e.target.id === "memberImageModal") {
+    e.target.classList.remove("show");
+    document.body.style.overflow = "";
+  }
+}
+
+function closeMemberImageModalButton() {
+  const modal = document.getElementById("memberImageModal");
+
+  if (modal) {
+    modal.classList.remove("show");
+    document.body.style.overflow = "";
+  }
+}
+</script>
+{% endblock %}

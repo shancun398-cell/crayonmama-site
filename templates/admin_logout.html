@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ログアウト | くれよんママ 管理画面</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Outfit:wght@400;500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+
+    <style>
+      .logout-page {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #fdf1f7 0%, #f6f6fb 100%);
+        padding: 24px;
+      }
+
+      .logout-card {
+        background: #fff;
+        border-radius: 28px;
+        box-shadow: 0 12px 40px rgba(28, 33, 52, 0.10);
+        padding: 52px 44px;
+        text-align: center;
+        max-width: 420px;
+        width: 100%;
+      }
+
+      .logout-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #fbe7f2, #f1eaff);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+      }
+
+      .logout-icon .material-symbols-outlined {
+        font-size: 36px;
+        color: #b89af5;
+      }
+
+      .logout-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: #1f2a44;
+        margin-bottom: 10px;
+      }
+
+      .logout-text {
+        font-size: 14px;
+        color: #8d96ab;
+        line-height: 1.8;
+        margin-bottom: 32px;
+      }
+
+      .logout-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .logout-btn-login {
+        display: block;
+        background: linear-gradient(135deg, #ef6bb6, #b89af5);
+        color: #fff;
+        font-size: 15px;
+        font-weight: 700;
+        padding: 14px 24px;
+        border-radius: 999px;
+        text-decoration: none;
+        transition: opacity 0.2s, transform 0.2s;
+        box-shadow: 0 4px 16px rgba(239, 107, 182, 0.28);
+      }
+
+      .logout-btn-login:hover {
+        opacity: 0.88;
+        transform: translateY(-2px);
+      }
+
+      .logout-btn-public {
+        display: block;
+        background: #f4f6fb;
+        color: #5d6880;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 13px 24px;
+        border-radius: 999px;
+        text-decoration: none;
+        transition: background 0.2s, transform 0.2s;
+      }
+
+      .logout-btn-public:hover {
+        background: #e9ecf4;
+        transform: translateY(-1px);
+      }
+
+      .logout-brand {
+        margin-top: 32px;
+        font-size: 12px;
+        color: #c5cad6;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="logout-page">
+      <div class="logout-card">
+
+        <div class="logout-icon">
+          <span class="material-symbols-outlined">logout</span>
+        </div>
+
+        <div class="logout-title">ログアウトしました</div>
+
+        <p class="logout-text">
+          管理画面からログアウトしました。<br />
+          引き続きご利用の場合は再度ログインしてください。
+        </p>
+
+        <div class="logout-buttons">
+          <a href="{{ url_for('admin_login') }}" class="logout-btn-login">
+            <span class="material-symbols-outlined" style="font-size:16px; vertical-align:middle; margin-right:4px;">login</span>
+            管理画面へログイン
+          </a>
+          <a href="{{ url_for('index') }}" class="logout-btn-public">
+            <span class="material-symbols-outlined" style="font-size:16px; vertical-align:middle; margin-right:4px;">home</span>
+            公開サイトへ戻る
+          </a>
+        </div>
+
+        <div class="logout-brand">くれよんママ 管理画面</div>
+
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,37 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}
+  公開メンバー管理
+{% endblock %}
+
+{% block content %}
+  <h1 class="section-title">公開メンバー管理</h1>
+
+  <div style="margin-bottom: 16px;">
+    <a href="{{ url_for('admin_public_member_new') }}" class="primary-button" style="display:inline-block;text-align:center;">＋ メンバー追加</a>
+  </div>
+
+  <div class="list-card">
+    {% for member in members %}
+      <div class="simple-row">
+        <div class="simple-row-left">
+          <div class="avatar-circle">{{ member.icon or '👤' }}</div>
+          <div>
+            <div class="row-title">{{ member.name }}</div>
+            <div class="row-sub">{{ member.role }}</div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; align-items:center;">
+          <a href="{{ url_for('admin_public_member_edit', member_id=member.id) }}">編集</a>
+
+          <form method="POST" action="{{ url_for('admin_public_member_delete', member_id=member.id) }}" onsubmit="return confirm('このメンバーを削除しますか？');" style="margin:0;">
+            <button type="submit" style="border:none; background:none; color:#d9534f; cursor:pointer;">削除</button>
+          </form>
+        </div>
+      </div>
+    {% else %}
+      <div class="empty-state">公開メンバーはまだ登録されていません</div>
+    {% endfor %}
+  </div>
+{% endblock %}

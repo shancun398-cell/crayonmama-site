@@ -1,0 +1,93 @@
+{% extends 'public_base.html' %}
+
+{% block title %}
+  アンケート | {{ event.title }}
+{% endblock %}
+
+{% block content %}
+  <section class="survey-page">
+    <div class="survey-container">
+      <div class="survey-header-card">
+        <div class="survey-header-icon">🌸</div>
+        <h1 class="survey-event-title">{{ event.title }}</h1>
+        <p class="survey-lead-text">ご参加ありがとうございました！<br>より良いイベントづくりのため、アンケートへのご協力をお願いいたします。</p>
+      </div>
+
+      <form method="POST" class="survey-form">
+        <!-- 質問1 -->
+        <div class="survey-q-card">
+          <div class="survey-q-num">Q1</div>
+          <h2 class="survey-q-title">このイベントは楽しかったですか？</h2>
+          <div class="survey-options-grid">
+            <label class="survey-option-item">
+              <input type="radio" name="satisfaction" value="とても楽しかった" required />
+              <div class="survey-option-box">
+                <span class="emoji">😆</span>
+                <span class="text">とても楽しかった</span>
+              </div>
+            </label>
+            <label class="survey-option-item">
+              <input type="radio" name="satisfaction" value="楽しかった" />
+              <div class="survey-option-box">
+                <span class="emoji">🙂</span>
+                <span class="text">楽しかった</span>
+              </div>
+            </label>
+            <label class="survey-option-item">
+              <input type="radio" name="satisfaction" value="あまり楽しくなかった" />
+              <div class="survey-option-box">
+                <span class="emoji">😐</span>
+                <span class="text">あまり楽しくなかった</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 質問2 -->
+        <div class="survey-q-card">
+          <div class="survey-q-num">Q2</div>
+          <h2 class="survey-q-title">何が一番良かったですか？</h2>
+          <div class="survey-options-grid">
+            <label class="survey-option-item">
+              <input type="radio" name="best_part" value="楽器の演奏" required />
+              <div class="survey-option-box">
+                <span class="emoji">🎻</span>
+                <span class="text">楽器の演奏</span>
+              </div>
+            </label>
+            <label class="survey-option-item">
+              <input type="radio" name="best_part" value="絵本の読み聞かせ" />
+              <div class="survey-option-box">
+                <span class="emoji">📖</span>
+                <span class="text">絵本の読み聞かせ</span>
+              </div>
+            </label>
+            <label class="survey-option-item">
+              <input type="radio" name="best_part" value="歌をうたう" />
+              <div class="survey-option-box">
+                <span class="emoji">🎵</span>
+                <span class="text">歌をうたう</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 質問3 -->
+        <div class="survey-q-card">
+          <div class="survey-q-num">Q3</div>
+          <h2 class="survey-q-title">今後してほしいことはありますか？ <span class="optional-badge">任意</span></h2>
+          <textarea name="future_request" class="survey-textarea" placeholder="例：屋外でのコンサート、親子でできるリズム遊びなど" rows="3"></textarea>
+        </div>
+
+        <!-- 質問4 -->
+        <div class="survey-q-card">
+          <div class="survey-q-num">Q4</div>
+          <h2 class="survey-q-title">その他感想がありましたらご自由にお書きください。 <span class="optional-badge">任意</span></h2>
+          <textarea name="general_comment" class="survey-textarea" placeholder="温かいメッセージや改善点など、ご自由にお書きください。" rows="4"></textarea>
+        </div>
+
+        <button type="submit" class="survey-submit-btn">アンケートを送信する</button>
+      </form>
+    </div>
+  </section>
+{% endblock %}

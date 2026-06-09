@@ -1,0 +1,30 @@
+# Python キャッシュ
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ローカルデータベース (本番はSupabaseへ移行するため除外)
+database.db
+*.db
+backups/
+
+# 仮想環境
+venv/
+.venv/
+env/
+
+# 環境変数設定ファイルなど
+.env
+
+# 一時作業スクリプト
+migrate_supabase.py
+revert_migrate.py
+clean_imports.py
+
+# システム/エディタ設定
+.history/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

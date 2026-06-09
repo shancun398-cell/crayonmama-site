@@ -1,0 +1,152 @@
+/* ==================================================
+   ロゴマーク（パレットアイコンの代替画像）の表示改善スタイル
+================================================== */
+
+/* 
+   [管理画面 / PC・スマホヘッダーのロゴ]
+   対象ページ：管理画面全体（ヘッダー左上）、一般公開トップページ（ヘッダー左上）
+*/
+.brand-mark,
+.mobile-hero-brand-mark {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+}
+
+/* 
+   [イベントのミニサムネイル画像]
+   対象ページ：イベント申込入力フォーム、申込内容確認画面
+*/
+.apply-event-thumb {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+}
+
+/* 
+   [スマホ版フッターロゴ]
+   対象ページ：一般公開トップページ（フッター上部）
+*/
+.mobile-bottom-brand-logo {
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 
+   [メインヒーロー中央の大きなロゴ]
+   対象ページ：一般公開トップページ（メインビジュアル中央）
+*/
+.mobile-hero-logo {
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+}
+
+/* 
+   [チラシ代替プレースホルダー画像]
+   対象ページ：イベント詳細ページ（チラシ画像が登録されていない場合）
+*/
+.detail-hero-placeholder {
+    border-radius: 20px !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+
+/* ==================================================
+   これまでの活動（ホーム・過去イベント）のUIデザイン改善
+================================================== */
+
+/*
+   画像要素自体の個別の角丸設定をクリアします。
+   これにより、画像とテキストの境界線が直線（平ら）になり、
+   カード全体の上の角だけがカードコンテナの角丸で綺麗に切り抜かれるようになります。
+*/
+.mobile-about-thumb img {
+    border-radius: 0 !important;
+}
+
+
+/* ==================================================
+   PC表示（1024px以上）における「これまでの活動」「イベント一覧」の表示調整
+   ※スマホ用のコンパクトな表示設定がPC表示に干渉して狭くなるのを防ぎ、
+     PC表示の時は元の大きく見やすいグリッドデザインに戻します。
+   対象ページ：一般公開トップページ（「これまでの活動」）、過去のイベント一覧ページ
+================================================== */
+@media (min-width: 1024px) {
+    
+    /* カード全体のコンテナ */
+    .mobile-about-card {
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        border-radius: 32px !important;
+        min-height: auto !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+        border: none !important;
+    }
+
+    /* 
+       サムネイル画像エリア
+       ※PC表示では縦の長さを短く（260px → 190px）にし、正方形に近いバランスにします。
+    */
+    .mobile-about-thumb {
+        width: 100% !important;
+        height: 190px !important; 
+        border-radius: 0 !important;
+        overflow: hidden !important;
+    }
+
+    .mobile-about-thumb img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        display: block !important;
+    }
+
+    /* 過去のイベント一覧（イベント一覧）の画像エリアも同様に縦を短く（190px）調整 */
+    .archive-card-image {
+        height: 190px !important;
+    }
+
+    /* テキスト・詳細情報エリア */
+    .mobile-about-content {
+        width: 100% !important;
+        padding: 24px !important;
+        background: #ffffff !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    /* イベントタイトル */
+    .mobile-about-title {
+        color: #16243d !important;
+        font-size: 22px !important;
+        font-weight: 800 !important;
+        line-height: 1.4 !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+    }
+
+    /* イベント開催日テキスト */
+    .mobile-about-text {
+        color: #6d778d !important;
+        font-size: 15px !important;
+    }
+
+    /* スマホ用の右矢印アイコン（PC版では非表示にする） */
+    .mobile-about-arrow {
+        display: none !important;
+    }
+}

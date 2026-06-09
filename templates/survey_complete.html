@@ -1,0 +1,16 @@
+{% extends "public_base.html" %}
+
+{% block title %}
+  アンケート完了 | くれよんママ
+{% endblock %}
+
+{% block content %}
+  <section class="survey-complete-page">
+    <div class="survey-complete-card">
+      <div class="survey-complete-icon">🎉</div>
+      <h1>ご回答ありがとうございました</h1>
+      <p>ご協力ありがとうございました。<br>いただいたご意見は、今後の活動改善に大切に活用させていただきます。</p>
+      <a href="{{ url_for('index') }}" class="survey-home-btn">トップページに戻る</a>
+    </div>
+  </section>
+{% endblock %}

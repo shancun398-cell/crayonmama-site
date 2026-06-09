@@ -1,0 +1,110 @@
+{% extends 'public_base.html' %}
+
+{% block title %}
+  お問い合わせ・ご要望 | くれよんママ
+{% endblock %}
+
+{% block content %}
+  <section class="contact-page">
+    <section class="contact-header-block">
+      <div class="contact-back-row">
+        <a href="{{ url_for('index') }}" class="contact-back-button">‹</a>
+        <h1 class="contact-page-title">お問い合わせ・ご要望</h1>
+      </div>
+    </section>
+
+    <section class="contact-hero-block">
+      <div class="contact-hero-icon">
+        <span class="material-symbols-outlined">
+          mail
+        </span>
+      </div>
+      <h2 class="contact-hero-title">お問い合わせ・ご要望</h2>
+      <p class="contact-hero-subtitle">お気軽にご連絡ください</p>
+    </section>
+
+    <form method="POST" class="contact-form-wrap">
+      <section class="contact-card">
+        <h3 class="contact-card-title">種別</h3>
+
+        <div class="contact-type-grid">
+          <label class="contact-type-option">
+            <input type="radio" name="contact_type" value="お問い合わせ" checked />
+            <span class="contact-type-box active-green">
+              <span class="contact-type-icon">❔</span>
+              <span class="contact-type-text">お問い合わせ</span>
+            </span>
+          </label>
+
+          <label class="contact-type-option">
+            <input type="radio" name="contact_type" value="ご要望" />
+            <span class="contact-type-box">
+              <span class="contact-type-icon">💡</span>
+              <span class="contact-type-text">ご要望</span>
+            </span>
+          </label>
+
+          <label class="contact-type-option">
+            <input type="radio" name="contact_type" value="その他" />
+            <span class="contact-type-box">
+              <span class="contact-type-icon">…</span>
+              <span class="contact-type-text">その他</span>
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <section class="contact-card">
+        <div class="form-group">
+          <label class="contact-label">お名前 <span class="contact-label-sub">（任意）</span></label>
+          <input type="text" name="name" class="contact-input" placeholder="山田 花子" />
+        </div>
+
+        <div class="form-group">
+          <label class="contact-label">メールアドレス</label>
+          <input type="email" name="email" class="contact-input" placeholder="example@email.com" />
+        </div>
+
+        <div class="form-group">
+          <label class="contact-label">内容 <span class="contact-required">（必須）</span></label>
+          <textarea name="message" class="contact-textarea" placeholder="ご質問・ご要望をご記入ください" maxlength="500" required></textarea>
+          <div class="contact-counter">0 / 500</div>
+        </div>
+
+        <label class="contact-check-row">
+          <input type="checkbox" name="reply_needed" value="1" />
+          <span>返信を希望する</span>
+        </label>
+
+        <button type="submit" class="contact-submit-button">送信する</button>
+      </section>
+    </form>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    const textarea = document.querySelector('.contact-textarea')
+    const counter = document.querySelector('.contact-counter')
+    
+    if (textarea && counter) {
+      const updateCounter = () => {
+        counter.textContent = `${textarea.value.length} / 500`
+      }
+      textarea.addEventListener('input', updateCounter)
+      updateCounter()
+    }
+    
+    const typeOptions = document.querySelectorAll('.contact-type-option input[type="radio"]')
+    typeOptions.forEach((radio) => {
+      radio.addEventListener('change', () => {
+        document.querySelectorAll('.contact-type-box').forEach((box) => {
+          box.classList.remove('active-green')
+        })
+        if (radio.checked) {
+          radio.nextElementSibling.classList.add('active-green')
+        }
+      })
+    })
+  </script>
+{% endblock %}
