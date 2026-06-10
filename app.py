@@ -936,7 +936,7 @@ def admin_contact_read(contact_id):
 
     conn.execute("""
         UPDATE contacts
-        SET is_read = 1
+        SET is_read = TRUE
         WHERE id = ?
     """, (contact_id,))
 
@@ -2125,7 +2125,7 @@ def contact():
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip()
         message = request.form.get("message", "").strip()
-        reply_needed = 1 if request.form.get("reply_needed") else 0
+        reply_needed = True if request.form.get("reply_needed") else False
 
         if not contact_type:
             flash("問い合わせ種別を選択してください", "error")
@@ -2223,7 +2223,7 @@ def admin_dashboard():
     unread_contacts = conn.execute("""
         SELECT COUNT(*) AS cnt
         FROM contacts
-        WHERE is_read = 0
+        WHERE is_read = FALSE
     """).fetchone()["cnt"]
 
     # 管理者人数
@@ -2995,17 +2995,17 @@ def admin_contacts():
         group["contacts"].append(contact)
         group["count"] += 1
 
-        if contact["is_read"] == 0:
+        if not contact["is_read"]:
             group["unread_count"] += 1
 
-        if contact["reply_needed"] == 1:
+        if contact["reply_needed"]:
             group["reply_needed_count"] += 1
 
     summary_row = conn.execute("""
         SELECT
             COUNT(*) AS total_count,
-            SUM(CASE WHEN is_read = 0 THEN 1 ELSE 0 END) AS unread_count,
-            SUM(CASE WHEN reply_needed = 1 THEN 1 ELSE 0 END) AS reply_needed_count
+            SUM(CASE WHEN is_read = FALSE THEN 1 ELSE 0 END) AS unread_count,
+            SUM(CASE WHEN reply_needed = TRUE THEN 1 ELSE 0 END) AS reply_needed_count
         FROM contacts
     """).fetchone()
 
