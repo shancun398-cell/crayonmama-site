@@ -820,7 +820,7 @@ def init_db():
 # QRコード生成
 
 
-@app.route("/admin/events/<int:event_id>/survey_qr")
+@app.route("/admin/events/<event_id>/survey_qr")
 @login_required
 def survey_qr(event_id):
 
@@ -926,7 +926,7 @@ def admin_surveys():
     )
 
 
-@app.route("/events/<int:event_id>/survey", methods=["GET", "POST"])
+@app.route("/events/<event_id>/survey", methods=["GET", "POST"])
 def event_survey(event_id):
 
     conn = get_db()
@@ -1552,7 +1552,7 @@ def events():
 # イベント詳細ルート
 
 
-@app.route("/events/<int:event_id>")
+@app.route("/events/<event_id>")
 def event_detail(event_id):
     conn = get_db()
     event = conn.execute(
@@ -1641,7 +1641,7 @@ def event_detail(event_id):
 # イベント申込ルート
 
 
-@app.route("/events/<int:event_id>/apply", methods=["GET", "POST"])
+@app.route("/events/<event_id>/apply", methods=["GET", "POST"])
 def apply_form(event_id):
     conn = get_db()
     event = conn.execute(
@@ -1704,7 +1704,7 @@ def apply_form(event_id):
 # イベント申込完了ルート
 
 
-@app.route("/events/<int:event_id>/apply/complete", methods=["POST"])
+@app.route("/events/<event_id>/apply/complete", methods=["POST"])
 def apply_complete(event_id):
     conn = get_db()
 
@@ -2127,7 +2127,7 @@ def archive():
 # 活動記録詳細ルート
 
 
-@app.route("/archive/<int:event_id>")
+@app.route("/archive/<event_id>")
 def archive_detail(event_id):
     conn = get_db()
 
@@ -2845,7 +2845,7 @@ def admin_applications():
 
 # 管理者用申込CSVダウンロードルート
 
-@app.route("/admin/applications/<int:event_id>/csv")
+@app.route("/admin/applications/<event_id>/csv")
 @login_required
 def admin_applications_csv(event_id):
     conn = get_db()
@@ -3205,7 +3205,7 @@ def admin_events():
 # イベント複製ルート
 
 
-@app.route("/admin/events/<int:event_id>/duplicate", methods=["POST"])
+@app.route("/admin/events/<event_id>/duplicate", methods=["POST"])
 def admin_event_duplicate(event_id):
     conn = get_db()
 
@@ -3348,7 +3348,7 @@ def admin_event_new():
 # イベント下書き
 
 
-@app.route("/admin/events/<int:event_id>/toggle-status", methods=["POST"])
+@app.route("/admin/events/<event_id>/toggle-status", methods=["POST"])
 def admin_event_toggle_status(event_id):
     conn = get_db()
 
@@ -3381,7 +3381,7 @@ def admin_event_toggle_status(event_id):
 # イベント編集ルート
 
 
-@app.route("/admin/events/<int:event_id>/edit", methods=["GET", "POST"])
+@app.route("/admin/events/<event_id>/edit", methods=["GET", "POST"])
 @login_required
 def admin_event_edit(event_id):
     conn = get_db()
@@ -3459,7 +3459,7 @@ def admin_event_edit(event_id):
 # 前日リマインドメール送信ルート
 
 
-@app.route("/admin/events/<int:event_id>/send-reminder", methods=["POST"])
+@app.route("/admin/events/<event_id>/send-reminder", methods=["POST"])
 @login_required
 def send_event_reminder(event_id):
 
@@ -3550,7 +3550,7 @@ def send_event_reminder(event_id):
 
 # イベント参加者への一斉メール送信ルート
 
-@app.route("/admin/events/<int:event_id>/message", methods=["GET", "POST"])
+@app.route("/admin/events/<event_id>/message", methods=["GET", "POST"])
 @login_required
 def admin_event_message(event_id):
 
@@ -3703,7 +3703,7 @@ def admin_mail_logs():
 # イベントのチラシ削除
 
 
-@app.route("/admin/events/<int:event_id>/delete-flyer", methods=["POST"])
+@app.route("/admin/events/<event_id>/delete-flyer", methods=["POST"])
 def admin_event_delete_flyer(event_id):
     conn = get_db()
 
@@ -3724,7 +3724,7 @@ def admin_event_delete_flyer(event_id):
 
 # イベント削除ルート
 
-@app.route("/admin/events/<int:event_id>/delete", methods=["POST"])
+@app.route("/admin/events/<event_id>/delete", methods=["POST"])
 @login_required
 def admin_event_delete(event_id):
     conn = get_db()
@@ -3998,7 +3998,7 @@ def upload_event_video():
 # イベント動画削除ルート
 
 
-@app.route("/admin/event-images/delete-video/<int:event_id>", methods=["POST"])
+@app.route("/admin/event-images/delete-video/<event_id>", methods=["POST"])
 def delete_event_video(event_id):
     conn = get_db()
 
