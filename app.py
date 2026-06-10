@@ -175,14 +175,40 @@ def alter_events_table():
     conn = get_db()
     columns = get_table_columns(conn, "events")
 
-    if "video_path" not in columns:
-        conn.execute("ALTER TABLE events ADD COLUMN video_path TEXT")
+    required_columns = [
+        ("title", "TEXT DEFAULT ''"),
+        ("category", "TEXT"),
+        ("event_date", "TEXT DEFAULT ''"),
+        ("status", "TEXT DEFAULT '非公開'"),
+        ("description", "TEXT"),
+        ("capacity", "INTEGER"),
+        ("image_url", "TEXT"),
+        ("location", "TEXT"),
+        ("youtube_url", "TEXT"),
+        ("video_path", "TEXT"),
+        ("start_time", "TEXT"),
+        ("flyer_image", "TEXT"),
+        ("additional_notes", "TEXT"),
+        ("belongings", "TEXT"),
+        ("time1_start", "TEXT"),
+        ("time1_end", "TEXT"),
+        ("time2_start", "TEXT"),
+        ("time2_end", "TEXT"),
+        ("capacity_time1", "INTEGER"),
+        ("capacity_time2", "INTEGER")
+    ]
 
-    if "image_url" not in columns:
-        conn.execute("ALTER TABLE events ADD COLUMN image_url TEXT")
+    for col_name, col_type in required_columns:
+        if col_name not in columns:
+            try:
+                conn.execute(f"ALTER TABLE events ADD COLUMN {col_name} {col_type}")
+                print(f"eventsテーブルにカラムを追加しました: {col_name}")
+            except Exception as e:
+                print(f"eventsテーブルへのカラム追加エラー ({col_name}): {e}")
 
     conn.commit()
     conn.close()
+
 
 
 def allowed_video_file(filename):
@@ -3880,6 +3906,7 @@ init_users_table()
 init_member_gallery_table()
 
 # 2. その後に、カラムの追加マイグレーションを実行する
+alter_events_table()
 add_members_page_image_columns()
 add_status_column()
 add_event_extra_columns()
