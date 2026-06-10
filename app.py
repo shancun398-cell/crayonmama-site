@@ -4178,21 +4178,26 @@ def admin_debug_db_diagnostics():
 # （本番環境のGunicornなどからインポートされた場合でも確実に実行されるようにモジュール読み込み時に実行します）
 # データベースの初期化とマイグレーションの実行
 # （本番環境のGunicornなどからインポートされた場合でも確実に実行されるようにモジュール読み込み時に実行します）
-# 1. まず全てのテーブルを作成する
-init_db()
-init_public_members_table()
-init_site_pages_table()
-init_users_table()
-init_member_gallery_table()
+try:
+    # 1. まず全てのテーブルを作成する
+    init_db()
+    init_public_members_table()
+    init_site_pages_table()
+    init_users_table()
+    init_member_gallery_table()
 
-# 2. その後に、カラムの追加マイグレーションを実行する
-alter_events_table()
-add_members_page_image_columns()
-add_status_column()
-add_event_extra_columns()
-add_application_cancel_columns()
-add_application_child_columns()
-add_time_columns()
+    # 2. その後に、カラムの追加マイグレーションを実行する
+    alter_events_table()
+    add_members_page_image_columns()
+    add_status_column()
+    add_event_extra_columns()
+    add_application_cancel_columns()
+    add_application_child_columns()
+    add_time_columns()
+except Exception as startup_err:
+    print(f"WARNING: Startup database initialization failed: {startup_err}", flush=True)
+    import traceback
+    traceback.print_exc()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
