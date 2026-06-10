@@ -173,9 +173,10 @@ def add_status_column():
 
 def alter_events_table():
     conn = get_db()
-    columns = get_table_columns(conn, "events")
-
-    required_columns = [
+    
+    # 1. events テーブルの確認
+    events_cols = get_table_columns(conn, "events")
+    events_req = [
         ("title", "TEXT DEFAULT ''"),
         ("category", "TEXT"),
         ("event_date", "TEXT DEFAULT ''"),
@@ -197,14 +198,82 @@ def alter_events_table():
         ("capacity_time1", "INTEGER"),
         ("capacity_time2", "INTEGER")
     ]
-
-    for col_name, col_type in required_columns:
-        if col_name not in columns:
+    for col_name, col_type in events_req:
+        if col_name not in events_cols:
             try:
                 conn.execute(f"ALTER TABLE events ADD COLUMN {col_name} {col_type}")
-                print(f"eventsテーブルにカラムを追加しました: {col_name}")
+                print(f"eventsにカラムを追加しました: {col_name}", flush=True)
             except Exception as e:
-                print(f"eventsテーブルへのカラム追加エラー ({col_name}): {e}")
+                print(f"eventsカラム追加エラー ({col_name}): {e}", flush=True)
+
+    # 2. applications テーブルの確認
+    apps_cols = get_table_columns(conn, "applications")
+    apps_req = [
+        ("event_id", "INTEGER DEFAULT 0"),
+        ("parent_name", "TEXT DEFAULT ''"),
+        ("email", "TEXT DEFAULT ''"),
+        ("phone", "TEXT DEFAULT ''"),
+        ("adult_count", "INTEGER DEFAULT 0"),
+        ("child_count", "INTEGER DEFAULT 0"),
+        ("child1_name", "TEXT"),
+        ("child1_age", "TEXT"),
+        ("child2_name", "TEXT"),
+        ("child2_age", "TEXT"),
+        ("child3_name", "TEXT"),
+        ("child3_age", "TEXT"),
+        ("child4_name", "TEXT"),
+        ("child4_age", "TEXT"),
+        ("child5_name", "TEXT"),
+        ("child5_age", "TEXT"),
+        ("status", "TEXT DEFAULT 'confirmed'"),
+        ("created_at", "TEXT DEFAULT CURRENT_TIMESTAMP"),
+        ("cancel_token", "TEXT"),
+        ("cancelled_at", "TEXT"),
+        ("time_slot", "TEXT DEFAULT '1'")
+    ]
+    for col_name, col_type in apps_req:
+        if col_name not in apps_cols:
+            try:
+                conn.execute(f"ALTER TABLE applications ADD COLUMN {col_name} {col_type}")
+                print(f"applicationsにカラムを追加しました: {col_name}", flush=True)
+            except Exception as e:
+                print(f"applicationsカラム追加エラー ({col_name}): {e}", flush=True)
+
+    # 3. contacts テーブルの確認
+    contacts_cols = get_table_columns(conn, "contacts")
+    contacts_req = [
+        ("contact_type", "TEXT DEFAULT ''"),
+        ("name", "TEXT"),
+        ("email", "TEXT"),
+        ("message", "TEXT DEFAULT ''"),
+        ("reply_needed", "INTEGER DEFAULT 0"),
+        ("is_read", "INTEGER DEFAULT 0"),
+        ("created_at", "TEXT DEFAULT CURRENT_TIMESTAMP"),
+        ("status", "TEXT DEFAULT '0'")
+    ]
+    for col_name, col_type in contacts_req:
+        if col_name not in contacts_cols:
+            try:
+                conn.execute(f"ALTER TABLE contacts ADD COLUMN {col_name} {col_type}")
+                print(f"contactsにカラムを追加しました: {col_name}", flush=True)
+            except Exception as e:
+                print(f"contactsカラム追加エラー ({col_name}): {e}", flush=True)
+
+    # 4. users テーブルの確認
+    users_cols = get_table_columns(conn, "users")
+    users_req = [
+        ("name", "TEXT DEFAULT ''"),
+        ("email", "TEXT DEFAULT ''"),
+        ("password", "TEXT DEFAULT ''"),
+        ("role", "TEXT DEFAULT 'admin'")
+    ]
+    for col_name, col_type in users_req:
+        if col_name not in users_cols:
+            try:
+                conn.execute(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}")
+                print(f"usersにカラムを追加しました: {col_name}", flush=True)
+            except Exception as e:
+                print(f"usersカラム追加エラー ({col_name}): {e}", flush=True)
 
     conn.commit()
     conn.close()
