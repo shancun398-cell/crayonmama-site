@@ -400,6 +400,37 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
+class PostgreSQLRow:
+    def __init__(self, dict_row, cursor_description):
+        self._row = dict_row
+        self._keys = [desc[0] for desc in cursor_description] if cursor_description else []
+
+    def keys(self):
+        return self._keys
+
+    def __getitem__(self, key):
+        return self._row[key]
+
+    def __contains__(self, key):
+        return key in self._keys
+
+    def get(self, key, default=None):
+        try:
+            return self._row[key]
+        except (KeyError, IndexError):
+            return default
+
+    def items(self):
+        if hasattr(self._row, 'items'):
+            return self._row.items()
+        return [(k, self._row[k]) for k in self._keys]
+
+    def __iter__(self):
+        return iter(self._row)
+
+    def __len__(self):
+        return len(self._keys)
+
 class PostgreSQLCursorWrapper:
     def __init__(self, cursor, conn_wrapper):
         self.cursor = cursor
@@ -417,10 +448,12 @@ class PostgreSQLCursorWrapper:
         row = self.cursor.fetchone()
         if row is None:
             return None
-        return row
+        return PostgreSQLRow(row, self.cursor.description)
 
     def fetchall(self):
-        return self.cursor.fetchall()
+        rows = self.cursor.fetchall()
+        desc = self.cursor.description
+        return [PostgreSQLRow(row, desc) for row in rows]
 
     @property
     def lastrowid(self):
@@ -432,7 +465,9 @@ class PostgreSQLCursorWrapper:
         return [desc[0] for desc in self.cursor.description]
 
     def __iter__(self):
-        return iter(self.cursor)
+        desc = self.cursor.description
+        for row in self.cursor:
+            yield PostgreSQLRow(row, desc)
 
 class PostgreSQLConnectionWrapper:
     def __init__(self, dsn):
