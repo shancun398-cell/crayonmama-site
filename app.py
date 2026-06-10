@@ -306,6 +306,15 @@ def alter_events_table():
             except Exception as e:
                 print(f"PostgreSQL: {table}.{col} の型変更スキップ/エラー: {e}", flush=True)
 
+        # contactsテーブルの is_read と reply_needed を INTEGER に変更する
+        for col in ["is_read", "reply_needed"]:
+            try:
+                # PostgreSQLでbooleanまたは数値からintegerへ安全にキャストする
+                conn.execute(f"ALTER TABLE contacts ALTER COLUMN {col} TYPE INTEGER USING (CASE WHEN {col} THEN 1 ELSE 0 END)")
+                print(f"PostgreSQL: contacts.{col} を INTEGER に変更しました", flush=True)
+            except Exception as e:
+                print(f"PostgreSQL: contacts.{col} の型変更スキップ/エラー: {e}", flush=True)
+
     conn.commit()
     conn.close()
 
@@ -503,18 +512,18 @@ class PostgreSQLConnectionWrapper:
         # SQLiteの date('now') -> PostgreSQLの CAST(CURRENT_DATE AS TEXT)
         query = re.sub(r"date\(\s*'now'\s*\)", "CAST(CURRENT_DATE AS TEXT)", query, flags=re.IGNORECASE)
         
-        # SQLiteの strftime('%Y', column) -> PostgreSQLの SUBSTR(column, 1, 4)
+        # SQLiteの strftime('%Y', column) -> PostgreSQLの SUBSTR(CAST(column AS VARCHAR), 1, 4)
         query = re.sub(
             r"strftime\(\s*'%Y'\s*,\s*([a-zA-Z0-9_\.]+)\s*\)",
-            r"SUBSTR(\1, 1, 4)",
+            r"SUBSTR(CAST(\1 AS VARCHAR), 1, 4)",
             query,
             flags=re.IGNORECASE
         )
         
-        # SQLiteの strftime('%m', column) -> PostgreSQLの SUBSTR(column, 6, 2)
+        # SQLiteの strftime('%m', column) -> PostgreSQLの SUBSTR(CAST(column AS VARCHAR), 6, 2)
         query = re.sub(
             r"strftime\(\s*'%m'\s*,\s*([a-zA-Z0-9_\.]+)\s*\)",
-            r"SUBSTR(\1, 6, 2)",
+            r"SUBSTR(CAST(\1 AS VARCHAR), 6, 2)",
             query,
             flags=re.IGNORECASE
         )
@@ -541,7 +550,14 @@ class PostgreSQLConnectionWrapper:
             self._cursor = self.conn.cursor()
         try:
             if params is not None:
-                self._cursor.execute(converted_query, params)
+                import uuid
+                if isinstance(params, (list, tuple)):
+                    converted_params = [str(p) if isinstance(p, uuid.UUID) else p for p in params]
+                elif isinstance(params, dict):
+                    converted_params = {k: (str(v) if isinstance(v, uuid.UUID) else v) for k, v in params.items()}
+                else:
+                    converted_params = str(params) if isinstance(params, uuid.UUID) else params
+                self._cursor.execute(converted_query, converted_params)
             else:
                 self._cursor.execute(converted_query)
         except Exception as e:
@@ -561,9 +577,16 @@ class PostgreSQLConnectionWrapper:
         self.conn.rollback()
 
     def close(self):
-        if self._cursor:
-            self._cursor.close()
-        self.conn.close()
+        try:
+            if self._cursor and not self._cursor.closed:
+                self._cursor.close()
+        except Exception:
+            pass
+        try:
+            if self.conn and not self.conn.closed:
+                self.conn.close()
+        except Exception:
+            pass
 
     def __enter__(self):
         return self
@@ -575,13 +598,33 @@ class PostgreSQLConnectionWrapper:
             self.commit()
         self.close()
 
+from flask import g, has_app_context
+
 def get_db():
-    if DATABASE_URL:
-        return PostgreSQLConnectionWrapper(DATABASE_URL)
-    else:
-        conn = sqlite3.connect(DB_NAME)
-        conn.row_factory = sqlite3.Row
-        return conn
+    if not has_app_context():
+        if DATABASE_URL:
+            return PostgreSQLConnectionWrapper(DATABASE_URL)
+        else:
+            conn = sqlite3.connect(DB_NAME)
+            conn.row_factory = sqlite3.Row
+            return conn
+            
+    if 'db' not in g:
+        if DATABASE_URL:
+            g.db = PostgreSQLConnectionWrapper(DATABASE_URL)
+        else:
+            g.db = sqlite3.connect(DB_NAME)
+            g.db.row_factory = sqlite3.Row
+    return g.db
+
+@app.teardown_appcontext
+def close_db(e=None):
+    db = g.pop('db', None)
+    if db is not None:
+        try:
+            db.close()
+        except Exception:
+            pass
 
 def get_table_columns(conn, table_name):
     if DATABASE_URL:
@@ -1002,7 +1045,7 @@ def admin_contact_read(contact_id):
 
     conn.execute("""
         UPDATE contacts
-        SET is_read = TRUE
+        SET is_read = 1
         WHERE id = ?
     """, (contact_id,))
 
@@ -2191,7 +2234,7 @@ def contact():
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip()
         message = request.form.get("message", "").strip()
-        reply_needed = True if request.form.get("reply_needed") else False
+        reply_needed = 1 if request.form.get("reply_needed") else 0
 
         if not contact_type:
             flash("問い合わせ種別を選択してください", "error")
@@ -2289,7 +2332,7 @@ def admin_dashboard():
     unread_contacts = conn.execute("""
         SELECT COUNT(*) AS cnt
         FROM contacts
-        WHERE is_read = FALSE
+        WHERE is_read = 0
     """).fetchone()["cnt"]
 
     # 管理者人数
@@ -3077,8 +3120,8 @@ def admin_contacts():
     summary_row = conn.execute("""
         SELECT
             COUNT(*) AS total_count,
-            SUM(CASE WHEN is_read = FALSE THEN 1 ELSE 0 END) AS unread_count,
-            SUM(CASE WHEN reply_needed = TRUE THEN 1 ELSE 0 END) AS reply_needed_count
+            SUM(CASE WHEN is_read = 0 THEN 1 ELSE 0 END) AS unread_count,
+            SUM(CASE WHEN reply_needed = 1 THEN 1 ELSE 0 END) AS reply_needed_count
         FROM contacts
     """).fetchone()
 
@@ -4085,8 +4128,8 @@ def admin_debug_db_diagnostics():
         ("admin_contacts - summary", """
             SELECT
                 COUNT(*) AS total_count,
-                SUM(CASE WHEN is_read = FALSE THEN 1 ELSE 0 END) AS unread_count,
-                SUM(CASE WHEN reply_needed = TRUE THEN 1 ELSE 0 END) AS reply_needed_count
+                SUM(CASE WHEN is_read = 0 THEN 1 ELSE 0 END) AS unread_count,
+                SUM(CASE WHEN reply_needed = 1 THEN 1 ELSE 0 END) AS reply_needed_count
             FROM contacts
         """, []),
         ("admin_events - events", "SELECT * FROM events ORDER BY event_date DESC, id DESC", []),
