@@ -339,8 +339,8 @@ class PostgreSQLConnectionWrapper:
     def _convert_query(self, query):
         query = query.replace('?', '%s')
         
-        # SQLiteの date('now') -> PostgreSQLの TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')
-        query = re.sub(r"date\(\s*'now'\s*\)", "TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')", query, flags=re.IGNORECASE)
+        # SQLiteの date('now') -> PostgreSQLの CAST(CURRENT_DATE AS TEXT)
+        query = re.sub(r"date\(\s*'now'\s*\)", "CAST(CURRENT_DATE AS TEXT)", query, flags=re.IGNORECASE)
         
         # SQLiteの strftime('%Y', column) -> PostgreSQLの SUBSTR(column, 1, 4)
         query = re.sub(
@@ -375,13 +375,22 @@ class PostgreSQLConnectionWrapper:
         return query
 
     def execute(self, query, params=None):
-        query = self._convert_query(query)
+        converted_query = self._convert_query(query)
         if self._cursor is None or self._cursor.closed:
             self._cursor = self.conn.cursor()
-        if params is not None:
-            self._cursor.execute(query, params)
-        else:
-            self._cursor.execute(query)
+        try:
+            if params is not None:
+                self._cursor.execute(converted_query, params)
+            else:
+                self._cursor.execute(converted_query)
+        except Exception as e:
+            print("--- DATABASE ERROR ---", flush=True)
+            print(f"Original Query: {query}", flush=True)
+            print(f"Converted Query: {converted_query}", flush=True)
+            print(f"Params: {params}", flush=True)
+            print(f"Error: {e}", flush=True)
+            print("----------------------", flush=True)
+            raise
         return PostgreSQLCursorWrapper(self._cursor, self)
 
     def commit(self):
