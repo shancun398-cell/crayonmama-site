@@ -173,7 +173,23 @@ def add_status_column():
 
 def alter_events_table():
     conn = get_db()
-    
+
+    # デバッグ用に各テーブルのカラム型をログに出力する
+    if DATABASE_URL:
+        try:
+            res = conn.execute("""
+                SELECT table_name, column_name, data_type 
+                FROM information_schema.columns 
+                WHERE table_name IN ('events', 'surveys', 'applications', 'contacts')
+                ORDER BY table_name, column_name
+            """).fetchall()
+            print("=== DATABASE COLUMNS SCHEMAS ===", flush=True)
+            for row in res:
+                print(f"Table: {row[0]}, Column: {row[1]}, Type: {row[2]}", flush=True)
+            print("================================", flush=True)
+        except Exception as e:
+            print(f"Schema debug print error: {e}", flush=True)
+
     # 1. events テーブルの確認
     events_cols = get_table_columns(conn, "events")
     events_req = [
@@ -820,7 +836,7 @@ def admin_surveys():
             events.event_date
         FROM surveys
         JOIN events
-        ON surveys.event_id = events.id
+        ON CAST(surveys.event_id AS TEXT) = CAST(events.id AS TEXT)
         {where_sql}
         ORDER BY events.event_date DESC, surveys.created_at DESC
     """, params).fetchall()
@@ -2973,7 +2989,14 @@ def admin_contacts():
     grouped_contacts = []
 
     for contact in contacts:
-        month_key = contact["created_at"][:7] if contact["created_at"] else "日付未設定"
+        created_at = contact["created_at"]
+        if created_at:
+            if isinstance(created_at, str):
+                month_key = created_at[:7]
+            else:
+                month_key = created_at.strftime("%Y-%m")
+        else:
+            month_key = "日付未設定"
 
         group = None
 
