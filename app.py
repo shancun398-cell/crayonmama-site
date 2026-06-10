@@ -339,8 +339,8 @@ class PostgreSQLConnectionWrapper:
     def _convert_query(self, query):
         query = query.replace('?', '%s')
         
-        # SQLiteの date('now') -> PostgreSQLの CURRENT_DATE
-        query = re.sub(r"date\(\s*'now'\s*\)", "CURRENT_DATE", query, flags=re.IGNORECASE)
+        # SQLiteの date('now') -> PostgreSQLの TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')
+        query = re.sub(r"date\(\s*'now'\s*\)", "TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')", query, flags=re.IGNORECASE)
         
         # SQLiteの strftime('%Y', column) -> PostgreSQLの SUBSTR(column, 1, 4)
         query = re.sub(
@@ -422,6 +422,16 @@ def get_table_columns(conn, table_name):
         return [row[0] for row in res]
     else:
         return [row["name"] for row in conn.execute(f"PRAGMA table_info({table_name})").fetchall()]
+
+def to_dict_safe(row):
+    if row is None:
+        return None
+    try:
+        return dict(row)
+    except TypeError:
+        if hasattr(row, "items"):
+            return dict(row.items())
+        raise
 
 supabase_client = None
 if SUPABASE_URL and SUPABASE_KEY:
@@ -1088,7 +1098,7 @@ def index():
         if not event:
             return None
 
-        event = dict(event)
+        event = to_dict_safe(event)
 
         # 活動画像を優先
         img = conn.execute(
@@ -1124,7 +1134,7 @@ def index():
     """).fetchone()
 
     if next_event:
-        next_event = dict(next_event)
+        next_event = to_dict_safe(next_event)
 
         capacity1 = next_event["capacity_time1"] or 0
         capacity2 = next_event["capacity_time2"] or 0
