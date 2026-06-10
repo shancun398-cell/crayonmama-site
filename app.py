@@ -291,6 +291,21 @@ def alter_events_table():
             except Exception as e:
                 print(f"usersカラム追加エラー ({col_name}): {e}", flush=True)
 
+    # PostgreSQL で event_id を VARCHAR に変更して UUID 互換にするマイグレーション
+    if DATABASE_URL:
+        alter_targets = [
+            ("event_images", "event_id"),
+            ("applications", "event_id"),
+            ("surveys", "event_id"),
+            ("mail_logs", "event_id")
+        ]
+        for table, col in alter_targets:
+            try:
+                conn.execute(f"ALTER TABLE {table} ALTER COLUMN {col} TYPE VARCHAR(255) USING {col}::VARCHAR(255)")
+                print(f"PostgreSQL: {table}.{col} を VARCHAR(255) に変更しました", flush=True)
+            except Exception as e:
+                print(f"PostgreSQL: {table}.{col} の型変更スキップ/エラー: {e}", flush=True)
+
     conn.commit()
     conn.close()
 
