@@ -47,11 +47,7 @@ MAIL_TO = os.environ.get("MAIL_TO", MAIL_USERNAME)
 
 def add_application_cancel_columns():
     conn = get_db()
-
-    columns = [
-        row["name"]
-        for row in conn.execute("PRAGMA table_info(applications)").fetchall()
-    ]
+    columns = get_table_columns(conn, "applications")
 
     if "cancel_token" not in columns:
         conn.execute("ALTER TABLE applications ADD COLUMN cancel_token TEXT")
@@ -65,11 +61,7 @@ def add_application_cancel_columns():
 
 def add_application_child_columns():
     conn = get_db()
-
-    columns = [
-        row["name"]
-        for row in conn.execute("PRAGMA table_info(applications)").fetchall()
-    ]
+    columns = get_table_columns(conn, "applications")
 
     if "child4_name" not in columns:
         conn.execute("ALTER TABLE applications ADD COLUMN child4_name TEXT")
@@ -150,16 +142,11 @@ def init_public_members_table():
 def add_members_page_image_columns():
     conn = get_db()
 
-    page_columns = [
-        row["name"] for row in conn.execute("PRAGMA table_info(site_pages)").fetchall()
-    ]
+    page_columns = get_table_columns(conn, "site_pages")
     if "main_image" not in page_columns:
         conn.execute("ALTER TABLE site_pages ADD COLUMN main_image TEXT")
 
-    member_columns = [
-        row["name"]
-        for row in conn.execute("PRAGMA table_info(public_members)").fetchall()
-    ]
+    member_columns = get_table_columns(conn, "public_members")
     if "image_path" not in member_columns:
         conn.execute("ALTER TABLE public_members ADD COLUMN image_path TEXT")
 
@@ -170,21 +157,23 @@ def add_members_page_image_columns():
 def add_status_column():
     conn = get_db()
     try:
-        conn.execute(
-            "ALTER TABLE contacts ADD COLUMN status TEXT DEFAULT '0'")
-        conn.commit()
-        print("statusカラム追加完了")
+        columns = get_table_columns(conn, "contacts")
+        if "status" not in columns:
+            conn.execute(
+                "ALTER TABLE contacts ADD COLUMN status TEXT DEFAULT '0'")
+            conn.commit()
+            print("statusカラム追加完了")
+        else:
+            print("statusカラムは既に存在します")
     except Exception as e:
-        print("すでに追加済み or エラー:", e)
+        print("エラー:", e)
     finally:
         conn.close()
 
 
 def alter_events_table():
     conn = get_db()
-    columns = [
-        row["name"] for row in conn.execute("PRAGMA table_info(events)").fetchall()
-    ]
+    columns = get_table_columns(conn, "events")
 
     if "video_path" not in columns:
         conn.execute("ALTER TABLE events ADD COLUMN video_path TEXT")
@@ -253,18 +242,20 @@ def add_time_columns():
         ("applications", "time_slot", "TEXT DEFAULT '1'")
     ]
 
-    for table, column, col_type in columns:
-        try:
-            conn.execute(
-                f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"
-            )
-            print(f"追加: {table}.{column}")
+    table_cols = {}
 
-        except Exception as e:
-            if "duplicate column name" in str(e):
-                pass
-            else:
-                print(e)
+    for table, column, col_type in columns:
+        if table not in table_cols:
+            table_cols[table] = get_table_columns(conn, table)
+
+        if column not in table_cols[table]:
+            try:
+                conn.execute(
+                    f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"
+                )
+                print(f"追加: {table}.{column}")
+            except Exception as e:
+                print(f"追加エラー: {table}.{column} - {e}")
 
     conn.commit()
     conn.close()
@@ -347,6 +338,34 @@ class PostgreSQLConnectionWrapper:
 
     def _convert_query(self, query):
         query = query.replace('?', '%s')
+        
+        # SQLiteの date('now') -> PostgreSQLの CURRENT_DATE
+        query = re.sub(r"date\(\s*'now'\s*\)", "CURRENT_DATE", query, flags=re.IGNORECASE)
+        
+        # SQLiteの strftime('%Y', column) -> PostgreSQLの SUBSTR(column, 1, 4)
+        query = re.sub(
+            r"strftime\(\s*'%Y'\s*,\s*([a-zA-Z0-9_\.]+)\s*\)",
+            r"SUBSTR(\1, 1, 4)",
+            query,
+            flags=re.IGNORECASE
+        )
+        
+        # SQLiteの strftime('%m', column) -> PostgreSQLの SUBSTR(column, 6, 2)
+        query = re.sub(
+            r"strftime\(\s*'%m'\s*,\s*([a-zA-Z0-9_\.]+)\s*\)",
+            r"SUBSTR(\1, 6, 2)",
+            query,
+            flags=re.IGNORECASE
+        )
+        
+        # SQLiteの date(column) -> PostgreSQLの column
+        query = re.sub(
+            r"date\(\s*([a-zA-Z0-9_\.]+)\s*\)",
+            r"\1",
+            query,
+            flags=re.IGNORECASE
+        )
+        
         query = re.sub(
             r'INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT',
             'SERIAL PRIMARY KEY',
@@ -393,6 +412,16 @@ def get_db():
         conn = sqlite3.connect(DB_NAME)
         conn.row_factory = sqlite3.Row
         return conn
+
+def get_table_columns(conn, table_name):
+    if DATABASE_URL:
+        res = conn.execute(
+            "SELECT column_name FROM information_schema.columns WHERE table_name = ?",
+            (table_name.lower(),)
+        ).fetchall()
+        return [row[0] for row in res]
+    else:
+        return [row["name"] for row in conn.execute(f"PRAGMA table_info({table_name})").fetchall()]
 
 supabase_client = None
 if SUPABASE_URL and SUPABASE_KEY:
@@ -491,10 +520,7 @@ def admin_required(view):
 
 def add_event_extra_columns():
     conn = get_db()
-
-    columns = [
-        row["name"] for row in conn.execute("PRAGMA table_info(events)").fetchall()
-    ]
+    columns = get_table_columns(conn, "events")
 
     if "start_time" not in columns:
         conn.execute("ALTER TABLE events ADD COLUMN start_time TEXT")
@@ -602,7 +628,7 @@ def init_db():
 
     # event_images に display_order カラムを追加
     try:
-        columns = [row["name"] for row in conn.execute("PRAGMA table_info(event_images)").fetchall()]
+        columns = get_table_columns(conn, "event_images")
         if "display_order" not in columns:
             conn.execute("ALTER TABLE event_images ADD COLUMN display_order INTEGER DEFAULT 0")
     except Exception as e:
