@@ -4036,6 +4036,101 @@ def delete_event_video(event_id):
     return redirect(url_for("admin_event_images", event_id=event_id))
 
 
+@app.route("/admin/debug-db-diagnostics")
+def admin_debug_db_diagnostics():
+    key = request.args.get("key")
+    if key != "90488crayon":
+        return "Unauthorized", 401
+        
+    import traceback
+    conn = get_db()
+    output = []
+    output.append("=== DATABASE DIAGNOSTICS ===")
+    
+    # 1. Schema Dump
+    try:
+        output.append("\n--- Schema Dump ---")
+        if DATABASE_URL:
+            tables = conn.execute("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public'
+            """).fetchall()
+            for t in tables:
+                t_name = t[0]
+                cols = conn.execute(f"""
+                    SELECT column_name, data_type, is_nullable
+                    FROM information_schema.columns
+                    WHERE table_name = '{t_name}'
+                    ORDER BY ordinal_position
+                """).fetchall()
+                col_strs = [f"{c[0]} ({c[1]}, null={c[2]})" for c in cols]
+                output.append(f"Table: {t_name}\n  Columns: {', '.join(col_strs)}")
+        else:
+            tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+            for t in tables:
+                t_name = t[0]
+                cols = conn.execute(f"PRAGMA table_info({t_name})").fetchall()
+                col_strs = [f"{c[1]} ({c[2]})" for c in cols]
+                output.append(f"Table: {t_name}\n  Columns: {', '.join(col_strs)}")
+    except Exception as e:
+        output.append(f"Schema dump failed: {e}\n{traceback.format_exc()}")
+        
+    # 2. Test Queries
+    queries_to_test = [
+        ("admin_members_page - site_pages", "SELECT * FROM site_pages WHERE page_key = 'members'", []),
+        ("admin_members_page - public_members", "SELECT * FROM public_members ORDER BY display_order ASC, id ASC", []),
+        ("admin_members_page - gallery", "SELECT * FROM member_gallery_images ORDER BY display_order ASC, id ASC", []),
+        ("admin_contacts - contacts", "SELECT * FROM contacts ORDER BY created_at DESC", []),
+        ("admin_contacts - summary", """
+            SELECT
+                COUNT(*) AS total_count,
+                SUM(CASE WHEN is_read = FALSE THEN 1 ELSE 0 END) AS unread_count,
+                SUM(CASE WHEN reply_needed = TRUE THEN 1 ELSE 0 END) AS reply_needed_count
+            FROM contacts
+        """, []),
+        ("admin_events - events", "SELECT * FROM events ORDER BY event_date DESC, id DESC", []),
+        ("admin_events - years", """
+            SELECT DISTINCT strftime('%Y', event_date) AS year
+            FROM events
+            WHERE event_date IS NOT NULL
+            ORDER BY year DESC
+        """, []),
+        ("admin_surveys - years", """
+            SELECT DISTINCT strftime('%Y', event_date) AS year
+            FROM events
+            WHERE date(event_date) < date('now')
+            ORDER BY year DESC
+        """, []),
+        ("admin_surveys - list", """
+            SELECT
+                surveys.*,
+                events.id AS event_id,
+                events.title AS event_title,
+                events.event_date
+            FROM surveys
+            JOIN events
+            ON CAST(surveys.event_id AS TEXT) = CAST(events.id AS TEXT)
+            WHERE date(events.event_date) < date('now')
+            ORDER BY events.event_date DESC, surveys.created_at DESC
+        """, [])
+    ]
+    
+    output.append("\n--- Query Diagnostics ---")
+    for desc, sql, params in queries_to_test:
+        output.append(f"\nTesting: {desc}")
+        output.append(f"SQL: {sql.strip()}")
+        try:
+            res = conn.execute(sql, params).fetchall()
+            output.append(f"--> SUCCESS (Rows: {len(res)})")
+        except Exception as e:
+            output.append(f"--> FAILED: {e}")
+            output.append(traceback.format_exc())
+            
+    conn.close()
+    return "<pre>" + "\n".join(output) + "</pre>"
+
+
 # データベースの初期化とマイグレーションの実行
 # （本番環境のGunicornなどからインポートされた場合でも確実に実行されるようにモジュール読み込み時に実行します）
 # データベースの初期化とマイグレーションの実行
