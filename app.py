@@ -495,7 +495,7 @@ class PostgreSQLCursorWrapper:
 
 class PostgreSQLConnectionWrapper:
     def __init__(self, dsn):
-        self.conn = psycopg2.connect(dsn, cursor_factory=psycopg2.extras.DictCursor)
+        self.conn = psycopg2.connect(dsn, cursor_factory=psycopg2.extras.DictCursor, connect_timeout=5)
         self._cursor = None
 
     @property
@@ -600,9 +600,41 @@ class PostgreSQLConnectionWrapper:
 
 from flask import g, has_app_context
 
+class DatabaseConnectionError(Exception):
+    pass
+
+@app.errorhandler(DatabaseConnectionError)
+def handle_db_connection_error(error):
+    import traceback
+    err_detail = traceback.format_exc()
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>データベース接続エラー | くれよんママ</title>
+        <meta charset="utf-8">
+        <style>
+            body {{ font-family: sans-serif; padding: 50px; background: #fef1f2; color: #991b1b; }}
+            h1 {{ font-size: 24px; border-bottom: 2px solid #fca5a5; padding-bottom: 10px; }}
+            pre {{ background: #fff; padding: 15px; border: 1px solid #fca5a5; border-radius: 5px; overflow-x: auto; }}
+        </style>
+    </head>
+    <body>
+        <h1>データベースへの接続に失敗しました</h1>
+        <p>一時的にアクセスが集中しているか、データベースの接続上限に達している可能性があります。時間を置いて再度お試しください。</p>
+        <h2>デバッグ情報:</h2>
+        <pre>{error}</pre>
+        <h3>詳細ログ:</h3>
+        <pre>{err_detail}</pre>
+    </body>
+    </html>
+    """
+    return html, 503
+
 def get_db():
     if not has_app_context():
         if DATABASE_URL:
+            # 起動時はタイムアウト付きで直接接続
             return PostgreSQLConnectionWrapper(DATABASE_URL)
         else:
             conn = sqlite3.connect(DB_NAME)
@@ -611,10 +643,17 @@ def get_db():
             
     if 'db' not in g:
         if DATABASE_URL:
-            g.db = PostgreSQLConnectionWrapper(DATABASE_URL)
+            try:
+                g.db = PostgreSQLConnectionWrapper(DATABASE_URL)
+            except Exception as e:
+                app.logger.error(f"Database connection error: {e}")
+                raise DatabaseConnectionError(str(e))
         else:
-            g.db = sqlite3.connect(DB_NAME)
-            g.db.row_factory = sqlite3.Row
+            try:
+                g.db = sqlite3.connect(DB_NAME)
+                g.db.row_factory = sqlite3.Row
+            except Exception as e:
+                raise DatabaseConnectionError(str(e))
     return g.db
 
 @app.teardown_appcontext
