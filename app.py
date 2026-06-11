@@ -494,83 +494,106 @@ class PostgreSQLCursorWrapper:
             yield PostgreSQLRow(row, desc)
 
 class PostgreSQLConnectionWrapper:
-    RESOLVED_ENDPOINT = None  # 例: "db.ljikugexwykssoronkbo.supabase.co:5432"
+    RESOLVED_ENDPOINT = None
 
     def __init__(self, dsn):
         import re
+        import time
         timeout = 5
         
-        # キャッシュされた解決済みエンドポイントがあれば、ホストとポート部分全体を書き換え
-        if PostgreSQLConnectionWrapper.RESOLVED_ENDPOINT:
+        def attempt_connect(endpoint):
+            nonlocal dsn
             host_match = re.search(r'@([^:/]+)(:\d+)?', dsn)
             if host_match:
-                orig_endpoint = host_match.group(0)
-                dsn = dsn.replace(orig_endpoint, "@" + PostgreSQLConnectionWrapper.RESOLVED_ENDPOINT)
-                    
-        # 接続試行
+                orig = host_match.group(0)
+                temp_dsn = dsn.replace(orig, "@" + endpoint)
+                return psycopg2.connect(temp_dsn, cursor_factory=psycopg2.extras.DictCursor, connect_timeout=timeout)
+            return psycopg2.connect(dsn, cursor_factory=psycopg2.extras.DictCursor, connect_timeout=timeout)
+
+        # キャッシュされた解決済みエンドポイントがあればそれを使用
+        if PostgreSQLConnectionWrapper.RESOLVED_ENDPOINT:
+            try:
+                self.conn = attempt_connect(PostgreSQLConnectionWrapper.RESOLVED_ENDPOINT)
+                self._cursor = None
+                return
+            except Exception:
+                PostgreSQLConnectionWrapper.RESOLVED_ENDPOINT = None
+
+        # 元のエンドポイント情報をパース
         host_match = re.search(r'@([^:/]+)(:\d+)?', dsn)
         if not host_match:
             self.conn = psycopg2.connect(dsn, cursor_factory=psycopg2.extras.DictCursor, connect_timeout=timeout)
             self._cursor = None
             return
-            
-        orig_endpoint = host_match.group(0)
+
+        orig_endpoint = host_match.group(0)[1:] # "@"を除く
         orig_host = host_match.group(1)
         orig_port = host_match.group(2) or ""
-        
-        # もし Supabase のプールホスト名であれば、自動解決を試みる
+        port_num = orig_port[1:] if orig_port else "6543"
+
+        # もし Supabase のプールホストであれば、高度な自動解決を実施
         if "pooler.supabase.com" in orig_host:
             prefix_match = re.match(r'(aws-)(\d+)(-ap-northeast-1\.pooler\.supabase\.com)', orig_host)
             if prefix_match:
                 base_prefix = prefix_match.group(1)
                 suffix = prefix_match.group(3)
                 orig_num = int(prefix_match.group(2))
+                
+                # 探索対象のホスト番号順
                 nums_to_try = [orig_num] + [n for n in [0, 1, 2, 3] if n != orig_num]
                 
-                last_err = None
-                # 1. プールホスト (aws-0〜aws-3) を試す
-                for num in nums_to_try:
-                    new_host = f"{base_prefix}{num}{suffix}"
-                    new_endpoint = f"{new_host}{orig_port}"
-                    new_dsn = dsn.replace(orig_endpoint, "@" + new_endpoint)
+                # 1. まず元のホストでリトライとポート5432フォールバックを試す (スリープ解除待ち)
+                # 元ホスト + 元ポート (6543)
+                for attempt in range(3):
                     try:
-                        self.conn = psycopg2.connect(new_dsn, cursor_factory=psycopg2.extras.DictCursor, connect_timeout=timeout)
+                        self.conn = attempt_connect(orig_endpoint)
                         self._cursor = None
-                        PostgreSQLConnectionWrapper.RESOLVED_ENDPOINT = new_endpoint  # エンドポイントをキャッシュ
-                        print(f"PostgreSQL connection resolved to pooler: {new_endpoint}", flush=True)
+                        PostgreSQLConnectionWrapper.RESOLVED_ENDPOINT = orig_endpoint
+                        print(f"PostgreSQL connection resolved to orig: {orig_endpoint} (attempt {attempt+1})", flush=True)
                         return
                     except Exception as e:
-                        last_err = e
                         err_str = str(e)
-                        # tenant/user not found の場合は次のホストを試す
-                        if "tenant/user" in err_str and "not found" in err_str:
-                            continue
-                        # もし認証エラー ("password authentication failed") が起きた場合、
-                        # プーラーのバグの可能性があるので、ループを抜けて直接接続を試す
-                        if "password authentication" in err_str:
-                            break
+                        print(f"Orig endpoint attempt {attempt+1} failed: {e}", flush=True)
+                        if attempt < 2:
+                            time.sleep(2)
                             
-                # 2. ループで失敗した、あるいは認証エラーが起きた場合、直接接続 (db.xxx.supabase.co:5432) を試す
-                user_match = re.search(r'//([^:@]+)', dsn)
-                if user_match:
-                    username = user_match.group(1)
-                    if '.' in username:
-                        project_ref = username.split('.')[-1]
-                        direct_endpoint = f"db.{project_ref}.supabase.co:5432"
-                        direct_dsn = dsn.replace(orig_endpoint, "@" + direct_endpoint)
+                # 元ホスト + ポート 5432 (Session Pooler)
+                session_endpoint = f"{orig_host}:5432"
+                for attempt in range(2):
+                    try:
+                        self.conn = attempt_connect(session_endpoint)
+                        self._cursor = None
+                        PostgreSQLConnectionWrapper.RESOLVED_ENDPOINT = session_endpoint
+                        print(f"PostgreSQL connection resolved to Session Pooler: {session_endpoint}", flush=True)
+                        return
+                    except Exception as e:
+                        print(f"Session Pooler endpoint attempt {attempt+1} failed: {e}", flush=True)
+                        if attempt < 1:
+                            time.sleep(2)
+
+                # 2. それでも失敗した場合は、他のホスト番号のプールサーバーを巡回探索
+                last_err = None
+                for num in nums_to_try:
+                    if num == orig_num:
+                        continue
+                    new_host = f"{base_prefix}{num}{suffix}"
+                    
+                    # 各ホストで ポート 6543 と ポート 5432 をテスト
+                    for test_port in ["6543", "5432"]:
+                        target_endpoint = f"{new_host}:{test_port}"
                         try:
-                            print(f"Attempting direct connection fallback to {direct_endpoint}...", flush=True)
-                            self.conn = psycopg2.connect(direct_dsn, cursor_factory=psycopg2.extras.DictCursor, connect_timeout=timeout)
+                            print(f"Attempting fallback to endpoint: {target_endpoint}...", flush=True)
+                            self.conn = attempt_connect(target_endpoint)
                             self._cursor = None
-                            PostgreSQLConnectionWrapper.RESOLVED_ENDPOINT = direct_endpoint  # キャッシュ
-                            print(f"PostgreSQL connection resolved to direct endpoint: {direct_endpoint}", flush=True)
+                            PostgreSQLConnectionWrapper.RESOLVED_ENDPOINT = target_endpoint
+                            print(f"PostgreSQL connection resolved to fallback: {target_endpoint}", flush=True)
                             return
-                        except Exception as direct_err:
-                            print(f"Direct connection fallback failed: {direct_err}", flush=True)
-                            raise direct_err
-                
+                        except Exception as e:
+                            last_err = e
+                            continue
+                            
                 raise last_err
-                
+
         self.conn = psycopg2.connect(dsn, cursor_factory=psycopg2.extras.DictCursor, connect_timeout=timeout)
         self._cursor = None
 
