@@ -499,7 +499,7 @@ class PostgreSQLConnectionWrapper:
     def __init__(self, dsn):
         import re
         import time
-        timeout = 5
+        timeout = 2  # 接続タイムアウトを2秒に短縮してフリーズを防止
         
         def attempt_connect(endpoint):
             nonlocal dsn
@@ -543,8 +543,8 @@ class PostgreSQLConnectionWrapper:
                 nums_to_try = [orig_num] + [n for n in [0, 1, 2, 3] if n != orig_num]
                 
                 # 1. まず元のホストでリトライとポート5432フォールバックを試す (スリープ解除待ち)
-                # 元ホスト + 元ポート (6543)
-                for attempt in range(3):
+                # 元ホスト + 元ポート (6543) - 最大 2回試行 (1回リトライ)
+                for attempt in range(2):
                     try:
                         self.conn = attempt_connect(orig_endpoint)
                         self._cursor = None
@@ -554,22 +554,19 @@ class PostgreSQLConnectionWrapper:
                     except Exception as e:
                         err_str = str(e)
                         print(f"Orig endpoint attempt {attempt+1} failed: {e}", flush=True)
-                        if attempt < 2:
-                            time.sleep(2)
-                            
-                # 元ホスト + ポート 5432 (Session Pooler)
-                session_endpoint = f"{orig_host}:5432"
-                for attempt in range(2):
-                    try:
-                        self.conn = attempt_connect(session_endpoint)
-                        self._cursor = None
-                        PostgreSQLConnectionWrapper.RESOLVED_ENDPOINT = session_endpoint
-                        print(f"PostgreSQL connection resolved to Session Pooler: {session_endpoint}", flush=True)
-                        return
-                    except Exception as e:
-                        print(f"Session Pooler endpoint attempt {attempt+1} failed: {e}", flush=True)
                         if attempt < 1:
-                            time.sleep(2)
+                            time.sleep(1) # ウェイトを1秒に短縮
+                            
+                # 元ホスト + ポート 5432 (Session Pooler) - 1回試行
+                session_endpoint = f"{orig_host}:5432"
+                try:
+                    self.conn = attempt_connect(session_endpoint)
+                    self._cursor = None
+                    PostgreSQLConnectionWrapper.RESOLVED_ENDPOINT = session_endpoint
+                    print(f"PostgreSQL connection resolved to Session Pooler: {session_endpoint}", flush=True)
+                    return
+                except Exception as e:
+                    print(f"Session Pooler endpoint attempt failed: {e}", flush=True)
 
                 # 2. それでも失敗した場合は、他のホスト番号のプールサーバーを巡回探索
                 last_err = None
@@ -577,20 +574,31 @@ class PostgreSQLConnectionWrapper:
                     if num == orig_num:
                         continue
                     new_host = f"{base_prefix}{num}{suffix}"
-                    
-                    # 各ホストで ポート 6543 と ポート 5432 をテスト
-                    for test_port in ["6543", "5432"]:
-                        target_endpoint = f"{new_host}:{test_port}"
-                        try:
-                            print(f"Attempting fallback to endpoint: {target_endpoint}...", flush=True)
-                            self.conn = attempt_connect(target_endpoint)
-                            self._cursor = None
-                            PostgreSQLConnectionWrapper.RESOLVED_ENDPOINT = target_endpoint
-                            print(f"PostgreSQL connection resolved to fallback: {target_endpoint}", flush=True)
-                            return
-                        except Exception as e:
-                            last_err = e
-                            continue
+                    target_endpoint = f"{new_host}:6543" # ポート6543のみをテストして高速化
+                    try:
+                        print(f"Attempting fallback to endpoint: {target_endpoint}...", flush=True)
+                        self.conn = attempt_connect(target_endpoint)
+                        self._cursor = None
+                        PostgreSQLConnectionWrapper.RESOLVED_ENDPOINT = target_endpoint
+                        print(f"PostgreSQL connection resolved to fallback: {target_endpoint}", flush=True)
+                        return
+                    except Exception as e:
+                        last_err = e
+                        # 認証エラー（password authentication failed）が出た場合、
+                        # ホスト自体は正しいがポート6543の認証バグの可能性があるので、
+                        # そのホストの 5432番ポートも試す
+                        if "password authentication" in str(e):
+                            session_target = f"{new_host}:5432"
+                            try:
+                                print(f"Attempting session fallback to endpoint: {session_target}...", flush=True)
+                                self.conn = attempt_connect(session_target)
+                                self._cursor = None
+                                PostgreSQLConnectionWrapper.RESOLVED_ENDPOINT = session_target
+                                print(f"PostgreSQL connection resolved to session fallback: {session_target}", flush=True)
+                                return
+                            except Exception as session_err:
+                                last_err = session_err
+                        continue
                             
                 raise last_err
 
