@@ -3436,7 +3436,7 @@ def admin_event_duplicate(event_id):
             capacity_time1,
             capacity_time2
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
         (
             event["category"],
@@ -3448,6 +3448,12 @@ def admin_event_duplicate(event_id):
             event["description"],
             event["belongings"] if "belongings" in event.keys() else None,
             event["additional_notes"] if "additional_notes" in event.keys() else None,
+            event["time1_start"] if "time1_start" in event.keys() else None,
+            event["time1_end"] if "time1_end" in event.keys() else None,
+            event["time2_start"] if "time2_start" in event.keys() else None,
+            event["time2_end"] if "time2_end" in event.keys() else None,
+            event["capacity_time1"] if "capacity_time1" in event.keys() else None,
+            event["capacity_time2"] if "capacity_time2" in event.keys() else None,
         ),
     )
 
@@ -3493,6 +3499,10 @@ def admin_event_new():
             cap2 = 0
         capacity = cap1 + cap2 if (cap1 + cap2) > 0 else cap1 or 10
 
+        # PostgreSQL互換性のため空文字列はNoneに変換する
+        db_capacity_time1 = int(capacity_time1) if capacity_time1 else None
+        db_capacity_time2 = int(capacity_time2) if capacity_time2 else None
+
         flyer_image = None
 
         file = request.files.get("flyer_image")
@@ -3526,8 +3536,8 @@ def admin_event_new():
                 time1_end,
                 time2_start,
                 time2_end,
-                capacity_time1,
-                capacity_time2,
+                db_capacity_time1,
+                db_capacity_time2,
             ),
         )
 
@@ -3599,6 +3609,11 @@ def admin_event_edit(event_id):
             unique_name = f"flyer_{uuid.uuid4().hex}{ext}"
             flyer_image = upload_to_supabase(file, unique_name)
 
+        capacity_time1_val = request.form.get("capacity_time1")
+        capacity_time2_val = request.form.get("capacity_time2")
+        db_capacity_time1 = int(capacity_time1_val) if capacity_time1_val else None
+        db_capacity_time2 = int(capacity_time2_val) if capacity_time2_val else None
+
         conn.execute(
             """
             UPDATE events
@@ -3627,11 +3642,11 @@ def admin_event_edit(event_id):
                 request.form.get("time1_end"),
                 request.form.get("time2_start"),
                 request.form.get("time2_end"),
-                request.form.get("capacity_time1"),
-                request.form.get("capacity_time2"),
+                db_capacity_time1,
+                db_capacity_time2,
                 request.form.get("status"),
                 # capacity は①+②の合算を自動計算
-                (int(request.form.get("capacity_time1") or 0) + int(request.form.get("capacity_time2") or 0)) or int(request.form.get("capacity_time1") or 10),
+                (int(capacity_time1_val or 0) + int(capacity_time2_val or 0)) or int(capacity_time1_val or 10),
                 request.form.get("description"),
                 request.form.get("location"),
 
