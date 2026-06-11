@@ -494,8 +494,55 @@ class PostgreSQLCursorWrapper:
             yield PostgreSQLRow(row, desc)
 
 class PostgreSQLConnectionWrapper:
+    RESOLVED_HOST = None
+
     def __init__(self, dsn):
-        self.conn = psycopg2.connect(dsn, cursor_factory=psycopg2.extras.DictCursor, connect_timeout=5)
+        import re
+        timeout = 5
+        
+        # キャッシュされた解決済みホストがあればDSNを書き換え
+        if PostgreSQLConnectionWrapper.RESOLVED_HOST:
+            host_match = re.search(r'@([^:/]+)', dsn)
+            if host_match:
+                orig_host = host_match.group(1)
+                if "pooler.supabase.com" in orig_host:
+                    dsn = dsn.replace(orig_host, PostgreSQLConnectionWrapper.RESOLVED_HOST)
+                    
+        # 接続試行
+        host_match = re.search(r'@([^:/]+)', dsn)
+        if not host_match:
+            self.conn = psycopg2.connect(dsn, cursor_factory=psycopg2.extras.DictCursor, connect_timeout=timeout)
+            self._cursor = None
+            return
+            
+        orig_host = host_match.group(1)
+        if "pooler.supabase.com" in orig_host:
+            prefix_match = re.match(r'(aws-)(\d+)(-ap-northeast-1\.pooler\.supabase\.com)', orig_host)
+            if prefix_match:
+                base_prefix = prefix_match.group(1)
+                suffix = prefix_match.group(3)
+                orig_num = int(prefix_match.group(2))
+                nums_to_try = [orig_num] + [n for n in [0, 1, 2, 3] if n != orig_num]
+                
+                last_err = None
+                for num in nums_to_try:
+                    new_host = f"{base_prefix}{num}{suffix}"
+                    new_dsn = dsn.replace(orig_host, new_host)
+                    try:
+                        self.conn = psycopg2.connect(new_dsn, cursor_factory=psycopg2.extras.DictCursor, connect_timeout=timeout)
+                        self._cursor = None
+                        PostgreSQLConnectionWrapper.RESOLVED_HOST = new_host  # 成功したホストをキャッシュ
+                        print(f"PostgreSQL connection resolved to host: {new_host}", flush=True)
+                        return
+                    except Exception as e:
+                        last_err = e
+                        err_str = str(e)
+                        if "tenant/user" in err_str and "not found" in err_str:
+                            continue
+                        raise e
+                raise last_err
+                
+        self.conn = psycopg2.connect(dsn, cursor_factory=psycopg2.extras.DictCursor, connect_timeout=timeout)
         self._cursor = None
 
     @property
