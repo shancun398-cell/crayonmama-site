@@ -554,7 +554,7 @@ class PostgreSQLConnectionWrapper:
                     except Exception as e:
                         err_str = str(e)
                         print(f"Orig endpoint attempt {attempt+1} failed: {e}", flush=True)
-                        if "password authentication" in err_str or "fatal:" in err_str.lower():
+                        if "password authentication" in err_str.lower():
                             raise
                         if attempt < 1:
                             time.sleep(1) # ウェイトを1秒に短縮
@@ -569,7 +569,7 @@ class PostgreSQLConnectionWrapper:
                     return
                 except Exception as e:
                     print(f"Session Pooler endpoint attempt failed: {e}", flush=True)
-                    if "password authentication" in str(e) or "fatal:" in str(e).lower():
+                    if "password authentication" in str(e).lower():
                         raise
 
                 # 2. それでも失敗した場合は、他のホスト番号のプールサーバーを巡回探索
@@ -588,10 +588,10 @@ class PostgreSQLConnectionWrapper:
                         return
                     except Exception as e:
                         last_err = e
-                        # 認証エラーやFATAL（password authentication failed / FATALなど）が出た場合、
+                        # 認証エラー（password authentication failed）が出た場合、
                         # ホスト自体は正しいがポート6543の認証バグの可能性があるので、
                         # そのホストの 5432番ポートも試す
-                        if "password authentication" in str(e) or "fatal:" in str(e).lower():
+                        if "password authentication" in str(e).lower() or "tenant/user" in str(e).lower() or "enotfound" in str(e).lower():
                             session_target = f"{new_host}:5432"
                             try:
                                 print(f"Attempting session fallback to endpoint: {session_target}...", flush=True)
@@ -601,7 +601,7 @@ class PostgreSQLConnectionWrapper:
                                 print(f"PostgreSQL connection resolved to session fallback: {session_target}", flush=True)
                                 return
                             except Exception as session_err:
-                                if "password authentication" in str(session_err) or "fatal:" in str(session_err).lower():
+                                if "password authentication" in str(session_err).lower():
                                     raise session_err
                                 last_err = session_err
                         continue
