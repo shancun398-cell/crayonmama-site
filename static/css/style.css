@@ -9177,9 +9177,11 @@ margin-top: 14px;
    繝｡繝ｳ繝��邏ｹ莉巽�壼・逵溘き繝ｼ繝襽���蟷・僑蠑ｵ
 ================================================== */
 
-.gallery-grid>*,
-.admin-gallery-grid>* {
-    height: 420px !important;
+@media (min-width: 1024px) {
+    .gallery-grid>*,
+    .admin-gallery-grid>* {
+        height: 420px !important;
+    }
 }
 
 .gallery-grid img,

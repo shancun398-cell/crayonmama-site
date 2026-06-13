@@ -2687,21 +2687,33 @@ def admin_members_page():
 @app.route("/admin/members-page/gallery/add", methods=["POST"])
 @login_required
 def admin_member_gallery_add():
-    file = request.files.get("gallery_image")
-    display_order = request.form.get("display_order") or 0
-    if file and file.filename:
-        filename = secure_filename(file.filename)
-        unique_name = f"gallery_{uuid.uuid4().hex}_{filename}"
-        image_path = upload_to_supabase(file, unique_name)
-
+    files = request.files.getlist("gallery_image")
+    
+    # 最大4枚制限をサーバー側でもかける（保険）
+    files = files[:4]
+    
+    if files:
         conn = get_db()
-        conn.execute(
-            """
-            INSERT INTO member_gallery_images (image_path, display_order)
-            VALUES (?, ?)
-        """,
-            (image_path, display_order),
-        )
+        
+        # 現在の最大のdisplay_orderを取得して、新しく追加する画像の順番を末尾にする
+        max_order_row = conn.execute("SELECT MAX(display_order) as max_order FROM member_gallery_images").fetchone()
+        current_max_order = max_order_row["max_order"] if max_order_row and max_order_row["max_order"] is not None else -1
+        
+        for index, file in enumerate(files):
+            if file and file.filename:
+                filename = secure_filename(file.filename)
+                unique_name = f"gallery_{uuid.uuid4().hex}_{filename}"
+                image_path = upload_to_supabase(file, unique_name)
+                
+                display_order = current_max_order + 1 + index
+                
+                conn.execute(
+                    """
+                    INSERT INTO member_gallery_images (image_path, display_order)
+                    VALUES (?, ?)
+                """,
+                    (image_path, display_order),
+                )
         conn.commit()
         conn.close()
 
