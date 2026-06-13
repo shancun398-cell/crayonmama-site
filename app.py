@@ -4346,21 +4346,45 @@ def admin_debug_db_diagnostics():
 # データベースの初期化とマイグレーションの実行
 # （本番環境のGunicornなどからインポートされた場合でも確実に実行されるようにモジュール読み込み時に実行します）
 try:
-    # 1. まず全てのテーブルを作成する
-    init_db()
-    init_public_members_table()
-    init_site_pages_table()
-    init_users_table()
-    init_member_gallery_table()
+    # 起動初期化中だけ get_db() の接続をキャッシュして使い回す（接続回数を1回に集約）
+    startup_conn = get_db()
+    if startup_conn:
+        original_close = startup_conn.close
+        startup_conn.close = lambda: None  # 起動中のcloseを無効化
+        
+        original_get_db = get_db
+        get_db = lambda: startup_conn  # get_dbをキャッシュに差し替え
+        
+        try:
+            # 1. まず全てのテーブルを作成する
+            init_db()
+            init_public_members_table()
+            init_site_pages_table()
+            init_users_table()
+            init_member_gallery_table()
 
-    # 2. その後に、カラムの追加マイグレーションを実行する
-    alter_events_table()
-    add_members_page_image_columns()
-    add_status_column()
-    add_event_extra_columns()
-    add_application_cancel_columns()
-    add_application_child_columns()
-    add_time_columns()
+            # 2. その後に、カラムの追加マイグレーションを実行する
+            alter_events_table()
+            add_members_page_image_columns()
+            add_status_column()
+            add_event_extra_columns()
+            add_application_cancel_columns()
+            add_application_child_columns()
+            add_time_columns()
+        finally:
+            # 復元処理
+            get_db = original_get_db
+            startup_conn.close = original_close
+            
+            # 最後にコミットしてクローズ
+            try:
+                startup_conn.commit()
+            except Exception:
+                pass
+            try:
+                startup_conn.close()
+            except Exception:
+                pass
 except Exception as startup_err:
     print(f"WARNING: Startup database initialization failed: {startup_err}", flush=True)
     import traceback
