@@ -4357,15 +4357,27 @@ def admin_debug_db_diagnostics():
 # （本番環境のGunicornなどからインポートされた場合でも確実に実行されるようにモジュール読み込み時に実行します）
 # データベースの初期化とマイグレーションの実行
 # （本番環境のGunicornなどからインポートされた場合でも確実に実行されるようにモジュール読み込み時に実行します）
+class ConnectionWrapper:
+    def __init__(self, conn):
+        self._conn = conn
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+    def close(self):
+        # 起動初期化中のcloseは無視する
+        pass
+    def keys(self):
+        if hasattr(self._conn, 'keys'):
+            return self._conn.keys()
+        raise AttributeError("keys")
+
 try:
     # 起動初期化中だけ get_db() の接続をキャッシュして使い回す（接続回数を1回に集約）
     startup_conn = get_db()
     if startup_conn:
-        original_close = startup_conn.close
-        startup_conn.close = lambda: None  # 起動中のcloseを無効化
+        wrapped_conn = ConnectionWrapper(startup_conn)
         
         original_get_db = get_db
-        get_db = lambda: startup_conn  # get_dbをキャッシュに差し替え
+        get_db = lambda: wrapped_conn  # get_dbをキャッシュに差し替え
         
         try:
             # 1. まず全てのテーブルを作成する
@@ -4386,7 +4398,6 @@ try:
         finally:
             # 復元処理
             get_db = original_get_db
-            startup_conn.close = original_close
             
             # 最後にコミットしてクローズ
             try:
